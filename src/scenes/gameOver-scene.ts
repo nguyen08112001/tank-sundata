@@ -10,7 +10,7 @@ export class GameOverScene extends Phaser.Scene {
 
     init(): void {
         this.startKey = this.input.keyboard.addKey(
-            Phaser.Input.Keyboard.KeyCodes.S
+            Phaser.Input.Keyboard.KeyCodes.H
         );
         this.startKey.isDown = false;
     }

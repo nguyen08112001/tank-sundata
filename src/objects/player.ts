@@ -1,5 +1,6 @@
 import { Bullet } from './bullet';
 import { IImageConstructor } from '../interfaces/image.interface';
+import { GameScene } from '../scenes/game-scene';
 
 export class Player extends Phaser.GameObjects.Container {
     body: Phaser.Physics.Arcade.Body;
@@ -167,6 +168,9 @@ export class Player extends Phaser.GameObjects.Container {
         if (this.scene.input.activePointer.isDown && this.scene.time.now > this.lastShoot) {
         // if (this.shootingKey.isDown && this.scene.time.now > this.lastShoot) {
         // this.scene.cameras.main.shake(20, 0.005);
+        const level = this.scene.scene.get('GameScene') as GameScene
+        if (level.score > 0)
+            level.score-=1
         this.shootSound.play({
             volume: 0.3
         })
@@ -221,7 +225,7 @@ export class Player extends Phaser.GameObjects.Container {
 
         if (this.health > 0) { 
         // return;
-        this.health -= 0.0005;
+        this.health -= 0.05;
         this.redrawLifebar();
         } else {
             this.health = 0;

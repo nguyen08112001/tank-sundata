@@ -18,6 +18,7 @@ export class Enemy extends Phaser.GameObjects.Image {
     // game objects
     private bullets: Phaser.GameObjects.Group;
     explosionSound: Phaser.Sound.BaseSound;
+    tween: Phaser.Tweens.Tween;
 
     public getBarrel(): Phaser.GameObjects.Image {
         return this.barrel;
@@ -61,7 +62,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         });
 
         // tweens
-        this.scene.tweens.add({
+        this.tween = this.scene.tweens.add({
         targets: this,
         props: { y: this.y - 200 },
         delay: 0,
@@ -132,22 +133,62 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.createEmitter(_x, _y)
             
         } else {
-            this.explosionSound.play()
-            this.health = 0;
-            this.active = false;
+            this.body.checkCollision.none = true
             const level = this.scene.scene.get('GameScene') as GameScene
             level.score+=100
-
-            if (level.enemies.countActive() === 6) {
+            level.tweens.add({
+                targets: level.scoreText,
+                props: {
+                    scale: 2
+                },
+                ease: 'Sine.easeInOut',
+                duration: 300,
+                yoyo: true,
+            })
+            this.kill()
+            if (level.enemies.countActive() === 1) {
                 this.scene.physics.world.timeScale = 10
                 this.scene.time.timeScale = 10
                 this.scene.cameras.main.setAlpha(0.5)
                 // this.scene.scene.pause()
                 this.scene.scene.launch('VictoryScene', { score: level.score })
-
-
             }
+            
         }
+    }
+
+    kill() {
+        this.tween.stop()
+        this.scene.tweens.add({
+            targets: this,
+            props: {
+                scaleX: 2,
+                scaleY: 2
+            },
+            ease: 'Sine.easeInOut',
+            duration: 300,
+            onComplete: () => {
+                this.explosionSound.play()
+                this.health = 0;
+                this.active = false;
+            }
+    })
+
+        var particles = this.scene.add.particles('flares').createEmitter({
+            frame: 'red',
+            x: this.x, y: this.y,
+            lifespan: { min: 600, max: 800 },
+            angle: { start: 0, end: 360, steps: 64 },
+            speed: 200,
+            quantity: 64,
+            scale: { start: 0.2, end: 0.1 },
+            frequency: 32,
+            blendMode: 'ADD'
+        });
+
+        this.scene.time.delayedCall(100, ()=>{
+            particles.stop();
+        });
     }
 
     createEmitter(_x: number, _y:number) {

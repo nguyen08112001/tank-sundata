@@ -157,6 +157,11 @@
             },
             {
                 "type": "audio",
+                "key": "music",
+                "url": "./assets/audios/music.mp3"
+            },
+            {
+                "type": "audio",
                 "key": "shoot",
                 "url": "./assets/audios/shoot.mp3"
             },

@@ -128,7 +128,7 @@ export class GameScene extends Phaser.Scene {
 
         //sound
         this.sound.stopAll()
-        // this.sound.add('music').play()
+        this.sound.add('music').play()
         this.setSound()
         const level = this.scene.get('PauseScene');
         level.events.on('setSound', this.setSound, this)
@@ -158,7 +158,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(): void {
-
+        console.log(this.enemies.countActive())
         this.updateScore()
 
         if (this.pauseKey.isDown) {
