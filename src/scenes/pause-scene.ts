@@ -80,6 +80,11 @@ export class PauseScene extends Phaser.Scene {
             .setScale(4)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
+                this.scene.stop('GameScene')
+                this.scene.stop('GameOverScene')
+                this.scene.stop('MenuScene')
+                this.scene.stop('PauseScene')
+                this.scene.stop('VictoryScene')
                 this.scene.start('GameScene');
             })
             .on('pointerover', () => {

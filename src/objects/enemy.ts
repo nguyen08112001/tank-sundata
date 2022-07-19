@@ -19,6 +19,11 @@ export class Enemy extends Phaser.GameObjects.Image {
     private bullets: Phaser.GameObjects.Group;
     explosionSound: Phaser.Sound.BaseSound;
     tween: Phaser.Tweens.Tween;
+    whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    fire: Phaser.GameObjects.Particles.ParticleEmitter;
+    hasSmoke: boolean = false;
+    hasFire: boolean = false;
 
     public getBarrel(): Phaser.GameObjects.Image {
         return this.barrel;
@@ -127,25 +132,44 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     public updateHealth(_x: number, _y:number): void {
         if (this.health > 0) {
-        this.health -= 0.05;
-        this.redrawLifebar();
+            this.health -= 0.05;
+            this.redrawLifebar();
 
-        this.createEmitter(_x, _y)
+            this.createEmitter(_x, _y)
+            if (this.health <= 0.7) {
+                this.createSmoke()
+            } 
+            if (this.health <= 0.4) {
+                this.createFire()
+            }
+
             
         } else {
-            this.body.checkCollision.none = true
-            const level = this.scene.scene.get('GameScene') as GameScene
-            level.score+=100
-            level.tweens.add({
-                targets: level.scoreText,
-                props: {
-                    scale: 2
-                },
-                ease: 'Sine.easeInOut',
-                duration: 300,
-                yoyo: true,
-            })
             this.kill()
+        }
+    }
+
+    kill() {
+        this.body.checkCollision.none = true
+            const level = this.scene.scene.get('GameScene') as GameScene
+
+            level.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    level.score+=100;
+                    level.tweens.add({
+                        targets: level.scoreText,
+                        props: {
+                            scale: 2
+                        },
+                        ease: 'Sine.easeInOut',
+                        duration: 300,
+                        yoyo: true,
+                    })
+                }
+            })
+           
+            
             if (level.enemies.countActive() === 1) {
                 this.scene.physics.world.timeScale = 10
                 this.scene.time.timeScale = 10
@@ -153,12 +177,8 @@ export class Enemy extends Phaser.GameObjects.Image {
                 // this.scene.scene.pause()
                 this.scene.scene.launch('VictoryScene', { score: level.score })
             }
-            
-        }
-    }
-
-    kill() {
         this.tween.stop()
+        this.fire?.stop()
         this.scene.tweens.add({
             targets: this,
             props: {
@@ -172,7 +192,15 @@ export class Enemy extends Phaser.GameObjects.Image {
                 this.health = 0;
                 this.active = false;
             }
-    })
+        })
+
+        const particleEffects = this.scene.scene.get('particle-effects')
+        particleEffects.events.emit('trail-to', {
+            fromX: this.x ,
+            fromY: this.y,
+            toX: 450 + 200,
+            toY: 50
+        })
 
         var particles = this.scene.add.particles('flares').createEmitter({
             frame: 'red',
@@ -206,6 +234,60 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.scene.time.delayedCall(200, ()=>{
             emitter.stop();
         });
+    }
+
+    createFire() {
+        if (this.hasFire) return
+        this.hasFire = true;
+
+        this.whiteSmoke.stop();
+        this.darkSmoke.stop();
+        this.fire = this.scene.add.particles('fire').createEmitter({
+            alpha: { start: 1, end: 0 },
+        scale: { start: 0.5, end: 2.5 },
+        //tint: { start: 0xff945e, end: 0xff945e },
+        speed: 20,
+        // accelerationY: -300,
+        angle: { min: -85, max: -95 },
+        rotate: { min: -180, max: 180 },
+        lifespan: { min: 1000, max: 1100 },
+        blendMode: 'ADD',
+        frequency: 110,
+        x: 400,
+        y: 300,
+        follow: this
+        });
+
+    }
+    createSmoke() {
+        if (this.hasSmoke) return
+        this.hasSmoke = true;
+        this.whiteSmoke = this.scene.add.particles('white-smoke').createEmitter({
+            x: 400,
+            y: 300,
+            speed: { min: 20, max: 100 },
+            angle: { min: 0, max: 360},
+            scale: { start: 1, end: 0},
+            alpha: { start: 0, end: 0.5},
+            lifespan: 2000,
+            //active: false,
+            follow: this
+        });
+        this.whiteSmoke.reserve(1000);
+    
+        this.darkSmoke = this.scene.add.particles('dark-smoke').createEmitter({
+            x: 400,
+            y: 300,
+            speed: { min: 20, max: 100 },
+            angle: { min: 0, max: 360},
+            scale: { start: 1, end: 0},
+            alpha: { start: 0, end: 0.1},
+            blendMode: 'SCREEN',
+            lifespan: 2000,
+            //active: false
+            follow: this
+        });
+        this.darkSmoke.reserve(1000);
     }
 
 }

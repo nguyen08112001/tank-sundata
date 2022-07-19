@@ -97,15 +97,6 @@
                 "url": "./assets/obstacles/barrel-red-top.png"
             },
             {
-                "type": "spritesheet",
-                "key": "explosion",
-                "url": "./assets/sprites/explosion.png",
-                "frameConfig": {
-                    "frameWidth": 256,
-                    "frameHeight": 256
-                }
-            },
-            {
                 "type": "image",
                 "key": "barrelRedSide",
                 "url": "./assets/obstacles/barrel-red-side.png"
@@ -142,6 +133,21 @@
             },
             {
                 "type": "image",
+                "key": "white-smoke",
+                "url": "./assets/sprites/smoke0.png"
+            },
+            {
+                "type": "image",
+                "key": "fire",
+                "url": "./assets/sprites/fire.png"
+            },
+            {
+                "type": "image",
+                "key": "dark-smoke",
+                "url": "./assets/sprites/smoke-puff.png"
+            },
+            {
+                "type": "image",
                 "key": "game-over",
                 "url": "./assets/sprites/GameOver.jpeg"
             },
@@ -155,11 +161,7 @@
                 "key": "explosion",
                 "url": "./assets/audios/explosion.wav"
             },
-            {
-                "type": "audio",
-                "key": "music",
-                "url": "./assets/audios/music.mp3"
-            },
+
             {
                 "type": "audio",
                 "key": "shoot",
@@ -178,7 +180,7 @@
             },
             {
                 "type": "atlas",
-                "key": "explosions",
+                "key": "explosion",
                 "textureURL": "./assets/sprites/explosion.png",
                 "atlasURL": "./assets/sprites/explosion.json"
             },

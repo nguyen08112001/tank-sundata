@@ -16,14 +16,17 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     create(): void {
-        this.cameras.main.setAlpha(0.5)
-
-        this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
+        // this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
 
         this.add.image(this.sys.canvas.width / 2 -100,this.sys.canvas.height -200, 'back-button')
             .setScale(6)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
+                this.scene.stop('GameScene')
+                this.scene.stop('GameOverScene')
+                this.scene.stop('MenuScene')
+                this.scene.stop('PauseScene')
+                this.scene.stop('VictoryScene')
                 this.scene.start('MenuScene');
             })
             
@@ -31,7 +34,7 @@ export class GameOverScene extends Phaser.Scene {
             .setScale(4)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                this.scene.start('GameScene');
+                this.restartGame()
             })
 
         this.bitmapTexts.push(
@@ -47,7 +50,16 @@ export class GameOverScene extends Phaser.Scene {
 
     update(): void {
         if (this.startKey.isDown) {
-            this.scene.start('MenuScene');
+            this.restartGame()
         }
+    }
+
+    restartGame() {
+        this.scene.stop('GameScene')
+        this.scene.stop('GameOverScene')
+        this.scene.stop('MenuScene')
+        this.scene.stop('PauseScene')
+        this.scene.stop('VictoryScene')
+        this.scene.start('MenuScene');
     }
 }

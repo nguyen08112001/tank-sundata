@@ -12,10 +12,19 @@ export class Shield extends Phaser.GameObjects.Image {
 
   private initImage() {
     // image
-    this.setScale(0.5)
+    this.setScale(0.2)
 
     // physics
     this.scene.physics.world.enable(this);
+
+    this.scene.tweens.add({
+      targets: this,
+      scale: 0.25,
+      ease: 'Power0',
+      yoyo: true,
+      duration: 500,
+      repeat: -1
+    })
   }
 
   update(): void {

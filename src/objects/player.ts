@@ -6,7 +6,7 @@ export class Player extends Phaser.GameObjects.Container {
     body: Phaser.Physics.Arcade.Body;
 
     // variables
-    private health: number;
+    public health: number;
     private lastShoot: number;
     private speed: number;
 
@@ -29,7 +29,11 @@ export class Player extends Phaser.GameObjects.Container {
     _shield: Phaser.GameObjects.Sprite;
     tank: Phaser.GameObjects.Image;
     private hasShield: boolean;
-
+    hasFire: boolean = false;
+    hasSmoke: boolean = false;
+    whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    fire: Phaser.GameObjects.Particles.ParticleEmitter;
     public getBullets(): Phaser.GameObjects.Group {
         return this.bullets;
     }
@@ -53,7 +57,7 @@ export class Player extends Phaser.GameObjects.Container {
         // variables
         this.health = 1;
         this.lastShoot = 0;
-        this.speed = 500;
+        this.speed = 300;
 
         // barrel
         this.barrel = this.scene.add.image(0, 0, 'barrelBlue');
@@ -107,7 +111,7 @@ export class Player extends Phaser.GameObjects.Container {
                 .setScale(0.3)
                 .setDepth(1)
         this.add(this._shield)
-        this.shield = true
+        this.shield = false
 
     }
 
@@ -218,20 +222,23 @@ export class Player extends Phaser.GameObjects.Container {
         this.lifeBar.setDepth(2);
     }
 
-    public updateHealth(_x: number, _y: number): void {
-        this.shield = false
+    public updateHealth(_x: number, _y: number, _dame: number): void {
+        if(this.shield) return 
         this.hitSound.play()
         this.scene.cameras.main.shake(20, 0.005);
 
         if (this.health > 0) { 
         // return;
-        this.health -= 0.05;
-        this.redrawLifebar();
+            this.health -= _dame;
+            this.redrawLifebar();
+            if (this.health <= 0.7) {
+                this.createSmoke()
+            } 
+            if (this.health <= 0.4) {
+                this.createFire()
+            }
         } else {
-            this.health = 0;
-            this.active = false;
-            this.scene.scene.start('GameOverScene');
-    
+            this.kill()
         }
         this.setAlpha(0)
         this.scene.tweens.add({
@@ -258,20 +265,75 @@ export class Player extends Phaser.GameObjects.Container {
         this.scene.time.delayedCall(200, ()=>{
             emitter.stop();
         });
-        // var particles = this.scene.add.particles('flares')
-        // .createEmitter({
-        //     frame: [ 'blue' ],
-        //     x: _x,
-        //     y: _y,
-        //     speed: 300,
-        //     gravityY: 400,
-        //     lifespan: 200,
-        //     scale: 0.4,
-        //     blendMode: 'ADD'
-        // });
-        // this.scene.time.delayedCall(200, ()=>{
-        //     particles.stop();
-        // });
+      
+    }
+
+    kill() {
+        this.fire?.stop()
+        this.darkSmoke?.stop()
+        this.whiteSmoke?.stop()
+        this.health = 0;
+        this.active = false;
+        this.scene.physics.world.timeScale = 10
+        this.scene.time.timeScale = 10
+        this.scene.tweens.timeScale = 0.5
+        this.scene.cameras.main.setAlpha(0.5)
+        // this.scene.scene.pause()
+        this.scene.scene.launch('GameOverScene');
+    }
+
+    createFire() {
+        if (this.hasFire) return
+        this.hasFire = true;
+
+        this.whiteSmoke.stop();
+        this.darkSmoke.stop();
+        this.fire = this.scene.add.particles('fire').createEmitter({
+            alpha: { start: 1, end: 0 },
+        scale: { start: 0.5, end: 2.5 },
+        //tint: { start: 0xff945e, end: 0xff945e },
+        speed: 20,
+        // accelerationY: -300,
+        angle: { min: -85, max: -95 },
+        rotate: { min: -180, max: 180 },
+        lifespan: { min: 1000, max: 1100 },
+        blendMode: 'ADD',
+        frequency: 110,
+        x: 400,
+        y: 300,
+        follow: this
+        });
+
+    }
+    createSmoke() {
+        if (this.hasSmoke) return
+        this.hasSmoke = true;
+        this.whiteSmoke = this.scene.add.particles('white-smoke').createEmitter({
+            x: 400,
+            y: 300,
+            speed: { min: 20, max: 100 },
+            angle: { min: 0, max: 360},
+            scale: { start: 1, end: 0},
+            alpha: { start: 0, end: 0.5},
+            lifespan: 2000,
+            //active: false,
+            follow: this
+        });
+        this.whiteSmoke.reserve(1000);
+    
+        this.darkSmoke = this.scene.add.particles('dark-smoke').createEmitter({
+            x: 400,
+            y: 300,
+            speed: { min: 20, max: 100 },
+            angle: { min: 0, max: 360},
+            scale: { start: 1, end: 0},
+            alpha: { start: 0, end: 0.1},
+            blendMode: 'SCREEN',
+            lifespan: 2000,
+            //active: false
+            follow: this
+        });
+        this.darkSmoke.reserve(1000);
     }
 
     set shield (shield: boolean) {

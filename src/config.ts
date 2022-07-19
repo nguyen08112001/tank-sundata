@@ -2,6 +2,7 @@ import { BootScene } from './scenes/boot-scene';
 import { GameScene } from './scenes/game-scene';
 import { GameOverScene } from './scenes/gameOver-scene';
 import { MenuScene } from './scenes/menu-scene';
+import ParticleEffects from './scenes/ParticleEffectsScene';
 import { PauseScene } from './scenes/pause-scene';
 import { VictoryScene } from './scenes/VictoryScene';
 
@@ -14,7 +15,7 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
   zoom: 0.6,
   type: Phaser.AUTO,
   parent: 'game',
-  scene: [BootScene, MenuScene, GameScene, PauseScene, GameOverScene, VictoryScene],
+  scene: [BootScene, MenuScene, GameScene, PauseScene, GameOverScene, VictoryScene, ParticleEffects],
   input: {
     keyboard: true
   },

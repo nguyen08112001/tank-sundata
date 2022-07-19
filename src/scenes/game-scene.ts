@@ -2,13 +2,15 @@ import { Player } from '../objects/player';
 import { Enemy } from '../objects/enemy';
 import { Obstacle } from '../objects/obstacles/obstacle';
 import { Bullet } from '../objects/bullet';
+import { Shield } from '../objects/shield';
+import { Barrel } from '../objects/Barrel';
 
 export class GameScene extends Phaser.Scene {
     private map: Phaser.Tilemaps.Tilemap;
     private tileset: Phaser.Tilemaps.Tileset;
     private layer: Phaser.Tilemaps.TilemapLayer;
 
-    private player: Player;
+    public player: Player;
     public enemies: Phaser.GameObjects.Group;
     private obstacles: Phaser.GameObjects.Group;
 
@@ -18,6 +20,8 @@ export class GameScene extends Phaser.Scene {
     scoreText: Phaser.GameObjects.BitmapText;
     score: number;
     private best: number = Number.parseInt(localStorage.getItem('best') as string, 10) || 0;
+    barrel: Barrel;
+    barrels: Phaser.GameObjects.Group;
 
     
     constructor() {
@@ -26,7 +30,9 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    init(): void {}
+    init() {
+        this.scene.run('particle-effects')
+    }
 
     create(): void {
 
@@ -45,6 +51,11 @@ export class GameScene extends Phaser.Scene {
 
         this.enemies = this.add.group({
         /*classType: Enemy*/
+        });
+        
+        this.barrels = this.add.group({
+        /*classType: Enemy*/
+        runChildUpdate: true
         });
         this.convertObjects();
 
@@ -98,6 +109,11 @@ export class GameScene extends Phaser.Scene {
         );
         }, this);
 
+        this.physics.add.collider(this.barrels, this.player.getBullets(), (_barrel: Barrel, _bullet: Bullet) => {
+            _bullet.kill()
+            _barrel.updateHealth(_bullet.x, _bullet.y)
+        })
+
         this.cameras.main.startFollow(this.player);
 
         //mini map
@@ -128,7 +144,7 @@ export class GameScene extends Phaser.Scene {
 
         //sound
         this.sound.stopAll()
-        this.sound.add('music').play()
+        // this.sound.add('music').play()
         this.setSound()
         const level = this.scene.get('PauseScene');
         level.events.on('setSound', this.setSound, this)
@@ -158,7 +174,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(): void {
-        console.log(this.enemies.countActive())
+        console.log(this.scoreText.x, this.scoreText.y)
         this.updateScore()
 
         if (this.pauseKey.isDown) {
@@ -213,6 +229,36 @@ export class GameScene extends Phaser.Scene {
             });
 
             this.enemies.add(enemy);
+        } else if (object.type === 'barrelRedTop' 
+        || object.type === 'barrelGreySideRust'
+        || object.type === 'barrelGreyTop'
+        ) {
+            var barrel = new Barrel({
+                    scene: this,
+                    x: object.x,
+                    y: object.y - 40,
+                    texture: object.type
+                });
+            this.barrels.add(barrel);
+        }
+        else if (object.type === 'shield') {
+            let shield = new Shield({
+            scene: this,
+            x: object.x,
+            y: object.y,
+            texture: 'shield'
+            });
+
+            this.physics.add.overlap(this.player, shield, () => {
+                this.player.shield = true;
+                this.time.addEvent({
+                    delay: 5000,
+                    callback: () => {
+                        this.player.shield = false
+                    }
+                }) 
+                shield.destroy()
+            })
         } else {
             let obstacle = new Obstacle({
             scene: this,
@@ -227,20 +273,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     private bulletHitLayer(bullet: Bullet): void {
-        bullet.destroy();
+        bullet.kill();
     }
 
     private bulletHitObstacles(bullet: Bullet, obstacle: Obstacle): void {
-        bullet.destroy();
+        bullet.kill();
     }
 
     private enemyBulletHitPlayer(bullet: Bullet, player: Player): void {
-        bullet.destroy();
-        player.updateHealth(bullet.x, bullet.y);
+        bullet.kill();
+        player.updateHealth(bullet.x, bullet.y, 0.05);
     }
 
     private playerBulletHitEnemy(bullet: Bullet, enemy: Enemy): void {
-        bullet.destroy();
+        bullet.kill();
         enemy.updateHealth(bullet.x, bullet.y);
     }
 

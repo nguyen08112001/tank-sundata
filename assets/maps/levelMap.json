@@ -259,6 +259,17 @@
                     "width": 80,
                     "x": 1640,
                     "y": 620
+                },
+                {
+                    "height": 80,
+                    "id": 129,
+                    "name": "",
+                    "rotation": 0,
+                    "type": "shield",
+                    "visible": true,
+                    "width": 80,
+                    "x": 700,
+                    "y": 750
                 }
             ],
             "opacity": 1,

@@ -20,7 +20,7 @@ export class VictoryScene extends Phaser.Scene {
     create(): void {    
         this.createTrunk()  
         this.time.addEvent({
-            delay: 3500,                // ms
+            delay: 2500,                // ms
             callback: () => {
                 this.addImage()
             },
@@ -39,11 +39,15 @@ export class VictoryScene extends Phaser.Scene {
 
     private addImage() {
         let img = this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'victory').setScale(2)
-        console.log(img.displayWidth, img.displayHeight)
         this.add.image(this.sys.canvas.width / 2 -100,this.sys.canvas.height -200, 'back-button')
             .setScale(6)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
+                this.scene.stop('GameScene')
+                this.scene.stop('GameOverScene')
+                this.scene.stop('MenuScene')
+                this.scene.stop('PauseScene')
+                this.scene.stop('VictoryScene')
                 this.scene.start('MenuScene');
             })
             
@@ -51,6 +55,11 @@ export class VictoryScene extends Phaser.Scene {
             .setScale(4)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
+                this.scene.stop('GameScene')
+                this.scene.stop('GameOverScene')
+                this.scene.stop('MenuScene')
+                this.scene.stop('PauseScene')
+                this.scene.stop('VictoryScene')
                 this.scene.start('GameScene');
             })
 
