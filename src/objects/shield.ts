@@ -1,33 +1,33 @@
 import { IImageConstructor } from '../interfaces/image.interface';
 
 export class Shield extends Phaser.GameObjects.Image {
-  body: Phaser.Physics.Arcade.Body;
+    body: Phaser.Physics.Arcade.Body;
 
-  constructor(aParams: IImageConstructor) {
-    super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
+    constructor(aParams: IImageConstructor) {
+        super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
 
-    this.initImage();
-    this.scene.add.existing(this);
-  }
+        this.initImage();
+        this.scene.add.existing(this);
+    }
 
-  private initImage() {
-    // image
-    this.setScale(0.2)
+    private initImage() {
+        // image
+        this.setScale(0.2)
 
-    // physics
-    this.scene.physics.world.enable(this);
+        // physics
+        this.scene.physics.world.enable(this);
 
-    this.scene.tweens.add({
-      targets: this,
-      scale: 0.25,
-      ease: 'Power0',
-      yoyo: true,
-      duration: 500,
-      repeat: -1
-    })
-  }
+        this.scene.tweens.add({
+            targets: this,
+            scale: 0.25,
+            ease: 'Power0',
+            yoyo: true,
+            duration: 500,
+            repeat: -1
+        })
+    }
 
-  update(): void {
-  }
+    update(): void {
+    }
 
 }

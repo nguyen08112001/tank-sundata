@@ -1,9 +1,9 @@
-import { BootScene } from './scenes/boot-scene';
-import { GameScene } from './scenes/game-scene';
-import { GameOverScene } from './scenes/gameOver-scene';
-import { MenuScene } from './scenes/menu-scene';
-import ParticleEffects from './scenes/ParticleEffectsScene';
-import { PauseScene } from './scenes/pause-scene';
+import { BootScene } from './scenes/BootScene';
+import { GameScene } from './scenes/GameScene';
+import { GameOverScene } from './scenes/GameOverScene';
+import { MenuScene } from './scenes/MenuScene';
+import  ParticleEffects  from './scenes/ParticleEffectsScene';
+import { PauseScene } from './scenes/PauseScene';
 import { VictoryScene } from './scenes/VictoryScene';
 
 export const GameConfig: Phaser.Types.Core.GameConfig = {
@@ -23,7 +23,7 @@ export const GameConfig: Phaser.Types.Core.GameConfig = {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: true
+      // debug: true
     }
   },
   backgroundColor: '#000000',

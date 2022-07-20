@@ -1,9 +1,9 @@
-import { Player } from '../objects/player';
-import { Enemy } from '../objects/enemy';
-import { Obstacle } from '../objects/obstacles/obstacle';
-import { Bullet } from '../objects/bullet';
-import { Shield } from '../objects/shield';
-import { Barrel } from '../objects/Barrel';
+import { Player } from '../objects/Player';
+import { Enemy } from '../objects/Enemy';
+import { Obstacle } from '../objects/obstacles/Obstacle';
+import { Bullet } from '../objects/Bullet';
+import { Shield } from '../objects/Shield';
+import { Barrel } from '../objects/obstacles/Barrel';
 
 export class GameScene extends Phaser.Scene {
     private map: Phaser.Tilemaps.Tilemap;
@@ -30,6 +30,13 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    preload(): void {
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.time.timeScale = 1
+            this.tweens.timeScale = 1
+        })
+    }
+
     init() {
         this.scene.run('particle-effects')
     }
@@ -45,23 +52,24 @@ export class GameScene extends Phaser.Scene {
         this.layer.setCollisionByProperty({ collide: true });
 
         this.obstacles = this.add.group({
-        /*classType: Obstacle,*/
-        runChildUpdate: true
+            /*classType: Obstacle,*/
+            runChildUpdate: true
         });
 
         this.enemies = this.add.group({
-        /*classType: Enemy*/
+            /*classType: Enemy*/
         });
         
         this.barrels = this.add.group({
-        /*classType: Enemy*/
-        runChildUpdate: true
+            /*classType: Enemy*/
+            runChildUpdate: true
         });
         this.convertObjects();
 
         // collider layer and obstacles
         this.physics.add.collider(this.player, this.layer);
         this.physics.add.collider(this.player, this.obstacles);
+        this.physics.add.collider(this.player.getBombs(), this.layer);
 
         // collider for bullets
         this.physics.add.collider(
@@ -107,12 +115,22 @@ export class GameScene extends Phaser.Scene {
             this.bulletHitLayer,
             null
         );
+
+        this.physics.add.collider(this.barrels, enemy.getBullets(), (_barrel: Barrel, _bullet: Bullet) => {
+            _bullet.kill()
+            _barrel.updateHealth(_bullet.x, _bullet.y)
+        }, null);
+
+
         }, this);
+
 
         this.physics.add.collider(this.barrels, this.player.getBullets(), (_barrel: Barrel, _bullet: Bullet) => {
             _bullet.kill()
             _barrel.updateHealth(_bullet.x, _bullet.y)
-        })
+        });
+        
+        
 
         this.cameras.main.startFollow(this.player);
 
@@ -174,7 +192,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(): void {
-        console.log(this.scoreText.x, this.scoreText.y)
         this.updateScore()
 
         if (this.pauseKey.isDown) {
@@ -230,8 +247,8 @@ export class GameScene extends Phaser.Scene {
 
             this.enemies.add(enemy);
         } else if (object.type === 'barrelRedTop' 
-        || object.type === 'barrelGreySideRust'
-        || object.type === 'barrelGreyTop'
+            || object.type === 'barrelGreySideRust'
+            || object.type === 'barrelGreyTop'
         ) {
             var barrel = new Barrel({
                     scene: this,

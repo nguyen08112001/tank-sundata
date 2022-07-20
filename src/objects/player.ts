@@ -1,6 +1,7 @@
-import { Bullet } from './bullet';
+import { Bullet } from './Bullet';
 import { IImageConstructor } from '../interfaces/image.interface';
-import { GameScene } from '../scenes/game-scene';
+import { GameScene } from '../scenes/GameScene';
+import { Bomb } from './Bomb';
 
 export class Player extends Phaser.GameObjects.Container {
     body: Phaser.Physics.Arcade.Body;
@@ -9,13 +10,16 @@ export class Player extends Phaser.GameObjects.Container {
     public health: number;
     private lastShoot: number;
     private speed: number;
+    private nextBomb: number;
 
     // children
     private barrel: Phaser.GameObjects.Image;
     private lifeBar: Phaser.GameObjects.Graphics;
+    private tank: Phaser.GameObjects.Image;
 
     // game objects
     private bullets: Phaser.GameObjects.Group;
+    private bombs: Phaser.GameObjects.Group;
 
     // input
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -24,16 +28,21 @@ export class Player extends Phaser.GameObjects.Container {
     private moveKeyUp: Phaser.Input.Keyboard.Key;
     private moveKeyDown: Phaser.Input.Keyboard.Key;
     private spaceKey: Phaser.Input.Keyboard.Key;
+
+    //sound
     private shootSound: Phaser.Sound.BaseSound;
-    hitSound: Phaser.Sound.BaseSound;
-    _shield: Phaser.GameObjects.Sprite;
-    tank: Phaser.GameObjects.Image;
+    private hitSound: Phaser.Sound.BaseSound;
+
+    //utils
+    private _shield: Phaser.GameObjects.Sprite;
     private hasShield: boolean;
-    hasFire: boolean = false;
-    hasSmoke: boolean = false;
-    whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
-    darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
-    fire: Phaser.GameObjects.Particles.ParticleEmitter;
+
+    //effect
+    private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
+    private fire: Phaser.GameObjects.Particles.ParticleEmitter;
+    
+
     public getBullets(): Phaser.GameObjects.Group {
         return this.bullets;
     }
@@ -41,12 +50,18 @@ export class Player extends Phaser.GameObjects.Container {
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y);
 
-        this.initImage(aParams.texture);
-
+        this.initContainer(aParams.texture);
+        this.initBombGroup();
         this.scene.add.existing(this);
     }
+    private initBombGroup() {
+        this.bombs = this.scene.add.group({
+            /*classType: Enemy*/
+            runChildUpdate: true
+        });
+    }
 
-    private initImage(texture: string) {
+    private initContainer(texture: string) {
         //tank
         this.tank = this.scene.add.image(0, 0, texture)
         this.tank.setOrigin(0.5, 0.5);
@@ -57,6 +72,7 @@ export class Player extends Phaser.GameObjects.Container {
         // variables
         this.health = 1;
         this.lastShoot = 0;
+        this.nextBomb = 0;
         this.speed = 300;
 
         // barrel
@@ -107,18 +123,21 @@ export class Player extends Phaser.GameObjects.Container {
 
         //shield
         this._shield = this.scene.add.sprite(0, 0, 'shield')
-                .setOrigin(0.5, 0.5)
-                .setScale(0.3)
-                .setDepth(1)
+            .setOrigin(0.5, 0.5)
+            .setScale(0.3)
+            .setDepth(1)
         this.add(this._shield)
         this.shield = false
 
+       
     }
 
     update(): void {
+
         if (this.active) {
             this.handleInput();
             this.handleShooting();
+            this.handleBomb()
         } else {
             this.barrel.destroy();
             this.lifeBar.destroy();
@@ -126,85 +145,92 @@ export class Player extends Phaser.GameObjects.Container {
             this.destroy();
         }
     }
+    private handleBomb() {
+        if (this.spaceKey.isDown && this.scene.time.now > this.nextBomb) {
 
-    private handleInput() {
-        // move tank forward
-        // small corrections with (- MATH.PI / 2) to align tank correctly
-        if (this.cursors.up.isDown || this.moveKeyUp.isDown) {
-        // this.scene.physics.velocityFromRotation(
-        //   this.rotation - Math.PI / 2,
-        //   this.speed,
-        //   this.body.velocity
-        // );
-        this.body.setVelocityY(-this.speed)
-        } else if (this.cursors.down.isDown || this.moveKeyDown.isDown) {
-        // this.scene.physics.velocityFromRotation(
-        //   this.rotation - Math.PI / 2,
-        //   -this.speed,
-        //   this.body.velocity
-        // );
-        this.body.setVelocityY(this.speed)
-        } else {
-        this.body.setVelocityY(0);
-        }
-
-        // rotate tank
-        if (this.cursors.left.isDown || this.moveKeyLeft.isDown) {
-        // this.rotation -= 0.02;
-        this.body.setVelocityX(-this.speed)
-        } else if (this.cursors.right.isDown || this.moveKeyRight.isDown) {
-        // this.rotation += 0.02;
-        this.body.setVelocityX(this.speed)
-        } else {
-        this.body.setVelocityX(0);
-        }
-
-        // rotate barrel
-        this.barrel.rotation = Phaser.Math.Angle.Between(
-        this.body.x,
-        this.body.y,
-        this.scene.input.activePointer.worldX,
-        this.scene.input.activePointer.worldY,
-        ) + Math.PI / 2
-    }
-
-    private handleShooting(): void {
-        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.lastShoot) {
-        // if (this.shootingKey.isDown && this.scene.time.now > this.lastShoot) {
-        // this.scene.cameras.main.shake(20, 0.005);
-        const level = this.scene.scene.get('GameScene') as GameScene
-        if (level.score > 0)
-            level.score-=1
-        this.shootSound.play({
-            volume: 0.3
-        })
-        this.scene.tweens.add({
-            targets: this,
-            props: { alpha: 0.8 },
-            delay: 0,
-            duration: 5,
-            ease: 'Power1',
-            easeParams: null,
-            hold: 0,
-            repeat: 0,
-            repeatDelay: 0,
-            yoyo: true,
-            paused: false
-        });
-
-        if (this.bullets.getLength() < 10) {
-            this.bullets.add(
-            new Bullet({
+            const bomb = new Bomb({
                 scene: this.scene,
                 rotation: this.barrel.rotation,
                 x: this.x,
                 y: this.y,
-                texture: 'bulletBlue'
+                texture: 'bomb'
+            });
+            this.bombs.add(bomb)
+
+            this.scene.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.bombs.remove(bomb);
+                    bomb.kill();
+                }
             })
-            );
+            
+            this.nextBomb = this.scene.time.now+1000;
+        }
+        
+    }
+
+    private handleInput() {
+        if (this.cursors.up.isDown || this.moveKeyUp.isDown) {
+            this.body.setVelocityY(-this.speed)
+        } else if (this.cursors.down.isDown || this.moveKeyDown.isDown) {
+            this.body.setVelocityY(this.speed)
+        } else {
+            this.body.setVelocityY(0);
+        }
+
+        if (this.cursors.left.isDown || this.moveKeyLeft.isDown) {
+            this.body.setVelocityX(-this.speed)
+        } else if (this.cursors.right.isDown || this.moveKeyRight.isDown) {
+            this.body.setVelocityX(this.speed)
+        } else {
+            this.body.setVelocityX(0);
+        }
+
+        // rotate barrel
+        this.barrel.rotation = Phaser.Math.Angle.Between(
+            this.x,
+            this.y,
+            this.scene.input.activePointer.worldX,
+            this.scene.input.activePointer.worldY,
+        ) + Math.PI / 2
+    }
+
+    private handleShooting(): void {
+        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.lastShoot && this.bullets.getLength() < 10) {
+
+            const level = this.scene.scene.get('GameScene') as GameScene
+            if (level.score > 0)
+                level.score-=1
+            this.shootSound.play({
+                volume: 0.3
+            })
+            this.scene.tweens.add({
+                targets: this,
+                props: { alpha: 0.8 },
+                delay: 0,
+                duration: 5,
+                ease: 'Power1',
+                easeParams: null,
+                hold: 0,
+                repeat: 0,
+                repeatDelay: 0,
+                yoyo: true,
+                paused: false
+            });
+
+            this.bullets.add(
+                new Bullet({
+                    scene: this.scene,
+                    rotation: this.barrel.rotation,
+                    x: this.x,
+                    y: this.y,
+                    texture: 'bulletBlue'
+                })
+            )
 
             this.lastShoot = this.scene.time.now + 80;
-        }
+            
         }
     }
 
@@ -212,10 +238,10 @@ export class Player extends Phaser.GameObjects.Container {
         this.lifeBar.clear();
         this.lifeBar.fillStyle(0xe66a28, 1);
         this.lifeBar.fillRect(
-        -this.tank.width / 2,
-        this.tank.height / 2,
-        this.tank.width * this.health,
-        15
+            -this.tank.width / 2,
+            this.tank.height / 2,
+            this.tank.width * this.health,
+            15
         );
         this.lifeBar.lineStyle(2, 0xffffff);
         this.lifeBar.strokeRect(-this.tank.width / 2, this.tank.height / 2, this.tank.width, 15);
@@ -223,12 +249,16 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     public updateHealth(_x: number, _y: number, _dame: number): void {
-        if(this.shield) return 
+        if(this.shield) return;
+
         this.hitSound.play()
         this.scene.cameras.main.shake(20, 0.005);
 
-        if (this.health > 0) { 
-        // return;
+        this.createGotHitEffect(_x, _y);
+
+
+        //core
+        if (this.health > 0) {
             this.health -= _dame;
             this.redrawLifebar();
             if (this.health <= 0.7) {
@@ -240,6 +270,9 @@ export class Player extends Phaser.GameObjects.Container {
         } else {
             this.kill()
         }
+    }
+
+    private createGotHitEffect(_x: number, _y: number) {
         this.setAlpha(0)
         this.scene.tweens.add({
             targets: this,
@@ -258,14 +291,12 @@ export class Player extends Phaser.GameObjects.Container {
             angle: { min: 0, max: 360 },
             scale: { start: 0.5, end: 0 },
             blendMode: 'ADD',
-            //active: false,
             lifespan: 200,
             gravityY: 800,
         });
         this.scene.time.delayedCall(200, ()=>{
             emitter.stop();
         });
-      
     }
 
     kill() {
@@ -274,40 +305,38 @@ export class Player extends Phaser.GameObjects.Container {
         this.whiteSmoke?.stop()
         this.health = 0;
         this.active = false;
-        this.scene.physics.world.timeScale = 10
-        this.scene.time.timeScale = 10
-        this.scene.tweens.timeScale = 0.5
-        this.scene.cameras.main.setAlpha(0.5)
-        // this.scene.scene.pause()
+        this.scene.physics.world.timeScale = 10;
+        this.scene.time.timeScale = 10;
+        this.scene.tweens.timeScale = 0.5;
+        this.scene.cameras.main.setAlpha(0.5);
         this.scene.scene.launch('GameOverScene');
     }
 
-    createFire() {
-        if (this.hasFire) return
-        this.hasFire = true;
+    private createFire() {
+        if (this.fire) return;
 
         this.whiteSmoke.stop();
         this.darkSmoke.stop();
         this.fire = this.scene.add.particles('fire').createEmitter({
             alpha: { start: 1, end: 0 },
-        scale: { start: 0.5, end: 2.5 },
-        //tint: { start: 0xff945e, end: 0xff945e },
-        speed: 20,
-        // accelerationY: -300,
-        angle: { min: -85, max: -95 },
-        rotate: { min: -180, max: 180 },
-        lifespan: { min: 1000, max: 1100 },
-        blendMode: 'ADD',
-        frequency: 110,
-        x: 400,
-        y: 300,
-        follow: this
+            scale: { start: 0.5, end: 2.5 },
+            tint: { start: 0xff945e, end: 0xff945e },
+            speed: 20,
+            // accelerationY: -300,
+            angle: { min: -85, max: -95 },
+            rotate: { min: -180, max: 180 },
+            lifespan: { min: 1000, max: 1100 },
+            blendMode: 'ADD',
+            frequency: 110,
+            x: 400,
+            y: 300,
+            follow: this
         });
 
     }
-    createSmoke() {
-        if (this.hasSmoke) return
-        this.hasSmoke = true;
+    private createSmoke() {
+        if (this.whiteSmoke) return;
+
         this.whiteSmoke = this.scene.add.particles('white-smoke').createEmitter({
             x: 400,
             y: 300,
@@ -343,5 +372,9 @@ export class Player extends Phaser.GameObjects.Container {
 
     get shield () {
         return this.hasShield;
+    }
+
+    public getBombs() {
+        return this.bombs;
     }
 }

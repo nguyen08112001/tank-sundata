@@ -148,6 +148,11 @@
             },
             {
                 "type": "image",
+                "key": "bomb",
+                "url": "./assets/sprites/bomb.png"
+            },
+            {
+                "type": "image",
                 "key": "game-over",
                 "url": "./assets/sprites/GameOver.jpeg"
             },

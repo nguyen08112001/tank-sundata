@@ -16,18 +16,23 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     create(): void {
-        // this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
+        // this.scene.cameras.main.setAlpha(0.5);
+        
+
+        this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                this.scene.get('GameScene').cameras.main.setAlpha(0.5)
+                this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
+            }
+        })
+
 
         this.add.image(this.sys.canvas.width / 2 -100,this.sys.canvas.height -200, 'back-button')
             .setScale(6)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                this.scene.stop('GameScene')
-                this.scene.stop('GameOverScene')
-                this.scene.stop('MenuScene')
-                this.scene.stop('PauseScene')
-                this.scene.stop('VictoryScene')
-                this.scene.start('MenuScene');
+                this.restartGame()
             })
             
         this.add.image(this.sys.canvas.width / 2 + 100,this.sys.canvas.height -200, 'play-button')
@@ -36,16 +41,6 @@ export class GameOverScene extends Phaser.Scene {
             .on('pointerdown', () => {
                 this.restartGame()
             })
-
-        this.bitmapTexts.push(
-        this.add.bitmapText(
-            this.sys.canvas.width / 2 - 150,
-            this.sys.canvas.height - 100,
-            'font',
-            'RETURN              PLAY',
-            30
-        )
-        );
     }
 
     update(): void {

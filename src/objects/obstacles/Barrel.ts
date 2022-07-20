@@ -1,5 +1,5 @@
-import { IImageConstructor } from '../interfaces/image.interface';
-import { GameScene } from '../scenes/game-scene';
+import { IImageConstructor } from '../../interfaces/image.interface';
+import { GameScene } from '../../scenes/GameScene';
 
 export class Barrel extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
@@ -39,7 +39,6 @@ export class Barrel extends Phaser.GameObjects.Image {
             this.health -= 0.05;
             
             this.createEmitter(_x, _y)
-            console.log('damage')
         } else {
             this.kill()
         }
@@ -47,27 +46,18 @@ export class Barrel extends Phaser.GameObjects.Image {
 
     kill() {
         if (!this.active) return;
+
         this.health = 0;
         this.active = false;
         this.setVisible(false)
-        var zone = this.scene.add.zone(this.x, this.y, 500, 500);
-        this.scene.physics.world.enable(zone, 1); // (0) DYNAMIC (1) STATIC
-        var tmp = this.scene as GameScene
-        this.scene.physics.add.overlap(tmp.player, zone, () => {
-            tmp.player.updateHealth(0,0, 100)
-        })
-        this.scene.physics.add.overlap(tmp.enemies, zone, (_a: any, _b: any) => {
-            _a.health = 0;
-            this.active = false;
-            _a.kill()
-        })
-        this.scene.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                zone.destroy()
-            }
-        })
+        
+        this.createDeadZone()
+        this.createExplosionEffect()
+        
+        this.destroy()
+    }
 
+    private createExplosionEffect() {
         var particles = this.scene.add.particles('explosion');
 
         particles.createEmitter({
@@ -112,10 +102,28 @@ export class Barrel extends Phaser.GameObjects.Image {
             on: false
         });
         particles.emitParticleAt(this.x, this.y)
-        this.destroy()
+    }
+    private createDeadZone() {
+        var zone = this.scene.add.zone(this.x, this.y, 200, 200);
+        this.scene.physics.world.enable(zone, 1); // (0) DYNAMIC (1) STATIC
+        var tmp = this.scene as GameScene
+        this.scene.physics.add.overlap(tmp.player, zone, () => {
+            tmp.player.updateHealth(0,0, 100)
+        })
+        this.scene.physics.add.overlap(tmp.enemies, zone, (_a: any, _b: any) => {
+            _a.health = 0;
+            this.active = false;
+            _a.kill()
+        })
+        this.scene.time.addEvent({
+            delay: 100,
+            callback: () => {
+                zone.destroy();
+            }
+        })
     }
 
-    createEmitter(_x: number, _y:number) {
+    private createEmitter(_x: number, _y:number) {
         var emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
             y: _y,
