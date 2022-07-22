@@ -36,10 +36,19 @@ export class Bomb extends Phaser.GameObjects.Image {
         this.scene.tweens.add({
             targets: this,
             angle: 360,
-            duration: 500,
-            repeat: -1,
-            ease: 'Power0'
+            duration: 800,
+            repeat: 0,
+            ease: 'Power0',
+            onComplete: () => {
+                this.scene.tweens.add({
+                    targets: this,
+                    scale: 0.6,
+                    duration: 200,
+                    ease: 'Linear'
+                })
+            }
         })
+        
     }
 
 
