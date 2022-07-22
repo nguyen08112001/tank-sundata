@@ -105,7 +105,7 @@ export class Bomb extends Phaser.GameObjects.Image {
         this.scene.physics.add.overlap(gameScene.player, zone, () => {
             gameScene.player.updateHealth(0,0, 100);
         })
-        this.scene.physics.add.overlap(gameScene.enemies, zone, (_enemy: Enemy, _zone: any) => {
+        this.scene.physics.add.overlap(gameScene.enemies, zone, (_enemy: any, _zone: any) => {
             _enemy.kill();
         })
         this.scene.time.addEvent({

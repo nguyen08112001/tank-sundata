@@ -75,57 +75,48 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(
         this.player.getBullets(),
         this.layer,
-        this.bulletHitLayer,
-        null,
-        this
+        this.bulletHitLayer
         );
 
         this.physics.add.collider(
         this.player.getBullets(),
         this.obstacles,
-        this.bulletHitObstacles,
-        null,
-        this
+        this.bulletHitObstacles
         );
 
-        this.enemies.children.each((enemy: Enemy) => {
+        this.enemies.children.each((enemy: any) => {
         this.physics.add.overlap(
             this.player.getBullets(),
             enemy,
-            this.playerBulletHitEnemy,
-            null,
-            this
+            this.playerBulletHitEnemy
         );
         this.physics.add.overlap(
             enemy.getBullets(),
             this.player,
-            this.enemyBulletHitPlayer,
-            null
+            this.enemyBulletHitPlayer
         );
 
         this.physics.add.collider(
             enemy.getBullets(),
             this.obstacles,
-            this.bulletHitObstacles,
-            null
+            this.bulletHitObstacles
         );
         this.physics.add.collider(
             enemy.getBullets(),
             this.layer,
-            this.bulletHitLayer,
-            null
+            this.bulletHitLayer
         );
 
-        this.physics.add.collider(this.barrels, enemy.getBullets(), (_barrel: Barrel, _bullet: Bullet) => {
+        this.physics.add.collider(this.barrels, enemy.getBullets(), (_barrel: any, _bullet: any) => {
             _bullet.kill()
             _barrel.updateHealth(_bullet.x, _bullet.y)
-        }, null);
+        });
 
 
         }, this);
 
 
-        this.physics.add.collider(this.barrels, this.player.getBullets(), (_barrel: Barrel, _bullet: Bullet) => {
+        this.physics.add.collider(this.barrels, this.player.getBullets(), (_barrel: any, _bullet: any) => {
             _bullet.kill()
             _barrel.updateHealth(_bullet.x, _bullet.y)
         });
@@ -200,7 +191,7 @@ export class GameScene extends Phaser.Scene {
 
         this.player.update();
 
-        this.enemies.children.each((enemy: Enemy) => {
+        this.enemies.children.each((enemy: any) => {
         enemy.update();
         if (this.player.active && enemy.active) {
             var angle = Phaser.Math.Angle.Between(
@@ -289,20 +280,20 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private bulletHitLayer(bullet: Bullet): void {
+    private bulletHitLayer(bullet: any, _layer: any): void {
         bullet.kill();
     }
 
-    private bulletHitObstacles(bullet: Bullet, obstacle: Obstacle): void {
+    private bulletHitObstacles(bullet: any, obstacle: any): void {
         bullet.kill();
     }
 
-    private enemyBulletHitPlayer(bullet: Bullet, player: Player): void {
+    private enemyBulletHitPlayer(bullet: any, player: any): void {
         bullet.kill();
         player.updateHealth(bullet.x, bullet.y, 0.05);
     }
 
-    private playerBulletHitEnemy(bullet: Bullet, enemy: Enemy): void {
+    private playerBulletHitEnemy(bullet: any, enemy: any): void {
         bullet.kill();
         enemy.updateHealth(bullet.x, bullet.y);
     }
