@@ -1,7 +1,11 @@
+import { PlayButton } from './../objects/Buttons/PlayButton';
+import { BackButton } from "../objects/Buttons/BackButton";
+import { NewGameButton } from '../objects/Buttons/NewGameButton';
+
 export class VictoryScene extends Phaser.Scene {
     private startKey: Phaser.Input.Keyboard.Key;
     private bitmapTexts: Phaser.GameObjects.BitmapText[] = [];
-    private bestScore = Number.parseInt(localStorage.getItem('best') as string, 10);
+    private bestScore = Number.parseInt(localStorage.getItem('best') as string, 10) || 0;
     score: number;
     constructor() {
         super({
@@ -15,6 +19,9 @@ export class VictoryScene extends Phaser.Scene {
         );
         this.startKey.isDown = false;
         this.score = props.score
+
+        var bestScore = Math.max(this.score, this.bestScore);
+        localStorage.setItem('best', bestScore + '')
     }
 
     create(): void {    
@@ -39,29 +46,20 @@ export class VictoryScene extends Phaser.Scene {
 
     private addImage() {
         let img = this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'victory').setScale(2)
-        this.add.image(this.sys.canvas.width / 2 -100,this.sys.canvas.height -200, 'back-button')
-            .setScale(6)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.stop('GameScene')
-                this.scene.stop('GameOverScene')
-                this.scene.stop('MenuScene')
-                this.scene.stop('PauseScene')
-                this.scene.stop('VictoryScene')
-                this.scene.start('MenuScene');
-            })
-            
-        this.add.image(this.sys.canvas.width / 2 + 100,this.sys.canvas.height -200, 'play-button')
-            .setScale(4)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.stop('GameScene')
-                this.scene.stop('GameOverScene')
-                this.scene.stop('MenuScene')
-                this.scene.stop('PauseScene')
-                this.scene.stop('VictoryScene')
-                this.scene.start('GameScene');
-            })
+
+        new BackButton({
+            scene: this,
+            x: this.sys.canvas.width / 2- 100 ,
+            y: this.sys.canvas.height -200,
+            texture: 'back-button',
+        })
+
+        new NewGameButton({
+            scene: this,
+            x: this.sys.canvas.width / 2 + 100 ,
+            y: this.sys.canvas.height -200,
+            texture: 'play-button',
+        })
 
         this.bitmapTexts.push(
             this.add.bitmapText(
