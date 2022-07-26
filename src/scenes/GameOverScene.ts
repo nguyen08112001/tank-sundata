@@ -18,14 +18,7 @@ export class GameOverScene extends Phaser.Scene {
     create(): void {
         // this.scene.cameras.main.setAlpha(0.5);
         
-
-        this.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                this.scene.get('GameScene').cameras.main.setAlpha(0.5)
-                this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
-            }
-        })
+        this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'game-over')
 
 
         this.add.image(this.sys.canvas.width / 2 -100,this.sys.canvas.height -200, 'back-button')

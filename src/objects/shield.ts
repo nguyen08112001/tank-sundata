@@ -6,17 +6,18 @@ export class Shield extends Phaser.GameObjects.Image {
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
 
-        this.initImage();
+        this.init();
         this.scene.add.existing(this);
     }
 
-    private initImage() {
+    private init() {
         // image
         this.setScale(0.2)
 
         // physics
         this.scene.physics.world.enable(this);
 
+        //tween
         this.scene.tweens.add({
             targets: this,
             scale: 0.25,

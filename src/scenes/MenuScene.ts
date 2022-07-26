@@ -1,3 +1,4 @@
+import { NewGameButton } from "../objects/Buttons/NewGameButton";
 export class MenuScene extends Phaser.Scene {
     private startKey: Phaser.Input.Keyboard.Key;
     private bitmapTexts: Phaser.GameObjects.BitmapText[] = [];
@@ -18,11 +19,12 @@ export class MenuScene extends Phaser.Scene {
     create(): void {        
         this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'start')
 
-        this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height -200, 'play-button')
-            .setScale(4)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.start('GameScene');
+
+        new NewGameButton({
+                scene: this,
+                x: (this.sys.canvas.width / 2),
+                y: this.sys.canvas.height -200,
+                texture: 'play-button',
             })
 
         this.bitmapTexts.push(

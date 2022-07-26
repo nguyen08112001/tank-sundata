@@ -1,7 +1,6 @@
-import { PauseScene } from '../scenes/PauseScene';
 import { Bullet } from './Bullet';
 import { IImageConstructor } from '../interfaces/image.interface';
-import { GameScene } from '../scenes/GameScene';
+import eventsCenter from '../scenes/EventsCenter';
 
 export class Enemy extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
@@ -9,10 +8,10 @@ export class Enemy extends Phaser.GameObjects.Image {
     // variables
     private health: number;
     private nextShoot: number;
-    public damage: number;
+    protected damage: number;
 
     // children
-    private barrel: Phaser.GameObjects.Image;
+    protected barrel: Phaser.GameObjects.Image;
     private lifeBar: Phaser.GameObjects.Graphics;
 
     // game objects
@@ -22,27 +21,60 @@ export class Enemy extends Phaser.GameObjects.Image {
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
+    private shootingDelayTime: number;
 
-    public getBarrel(): Phaser.GameObjects.Image {
+    getBarrel(): Phaser.GameObjects.Image {
         return this.barrel;
     }
 
-    public getBullets(): Phaser.GameObjects.Group {
+    getBullets(): Phaser.GameObjects.Group {
         return this.bullets;
+    }
+
+    setDead() {
+        this.body.checkCollision.none = true;
+
+        this.createDeadEffectAndSetActive();
+        
+        eventsCenter.emit('enemy-dead', this.x, this.y);
+    }
+
+    gotDamage(_x: number, _y:number, _damage: number): void {
+        this.health -= _damage;
+        this.createGotHitEffect(_x, _y);
+        this.reDrawLifebar();
+        if (this.health > 0) {
+            
+        } else {
+            this.setDead();
+        }
     }
 
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
 
-        this.initContainer();
+        this.init();
         this.scene.add.existing(this);
     }
 
-    private initContainer() {
+    update(_playerX: number, _playerY: number): void {
+        
+        if (this.active) {
+            this.updateTankImage(_playerX, _playerY);
+            this.handleShooting();
+        } else {
+            this.barrel.destroy();
+            this.lifeBar.destroy();
+            this.destroy();
+        }
+    }
+
+    private init() {
         // variables
         this.health = 1;
         this.nextShoot = 0;
-        this.damage = 0.5
+        this.damage = 0.05
+        this.shootingDelayTime = 400;
 
         // image
         this.setDepth(0);
@@ -83,19 +115,42 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.scene.physics.world.enable(this);
     }
 
-    update(): void {
-        if (this.active) {
-            this.barrel.x = this.x;
-            this.barrel.y = this.y;
-            this.lifeBar.x = this.x;
-            this.lifeBar.y = this.y;
-            this.handleShooting();
-        } else {
-            this.destroy();
-            this.barrel.destroy();
-            this.lifeBar.destroy();
+    private updateTankImage(_playerX: number, _playerY: number) {
+        this.updateLifeBar()
+        this.updateBarrel(_playerX, _playerY);
+        this.updateSmokeEffect()
+    }
+    private updateSmokeEffect() {
+        if (this.health <= 0.7) {
+            this.createSmoke();
+        } 
+        if (this.health <= 0.4) {
+            this.whiteSmoke.stop();
+            this.darkSmoke.stop();
+            this.createFire();
         }
     }
+    private updateLifeBar() {
+        this.lifeBar.x = this.x;
+        this.lifeBar.y = this.y;
+    }
+
+    private updateBarrel(_playerX: number, _playerY: number) {
+        this.barrel.x = this.x;
+        this.barrel.y = this.y;
+        if (this.active) {
+            var angle = Phaser.Math.Angle.Between(
+            this.body.x,
+            this.body.y,
+            _playerX,
+            _playerY,
+            );
+            this.getBarrel().angle =
+            (angle + Math.PI / 2) * Phaser.Math.RAD_TO_DEG;
+        }
+    }
+
+    
 
     private handleShooting(): void {
         if (this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
@@ -111,7 +166,7 @@ export class Enemy extends Phaser.GameObjects.Image {
                 })
             );
 
-            this.nextShoot = this.scene.time.now + 400;
+            this.nextShoot = this.scene.time.now + this.shootingDelayTime;
         }
     }
 
@@ -129,34 +184,13 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.lifeBar.setDepth(1);
     }
 
-    public updateHealth(_x: number, _y:number): void {
-        if (this.health > 0) {
-            this.health -= 0.05;
-            this.reDrawLifebar();
+    private createDeadEffectAndSetActive() {
+        this.tween.stop();
 
-            this.createGotHitEffect(_x, _y)
-
-            if (this.health <= 0.7) {
-                this.createSmoke()
-            } 
-            if (this.health <= 0.4) {
-                this.createFire()
-            }
-        } else {
-            this.kill()
-        }
-    }
-
-    kill() {
-        this.body.checkCollision.none = true;
-
-        this.createDeadEffect();
-        this.createIncreaseScoreEffect();
-        this.checkEndGame();
-    }
-    private createDeadEffect() {
-        this.tween.stop()
-        this.fire?.stop()
+        this.fire?.stop();
+        this.whiteSmoke?.stop();
+        this.darkSmoke?.stop();
+        
         this.scene.tweens.add({
             targets: this,
             props: {
@@ -189,47 +223,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         });
     }
 
-    private checkEndGame() {
-        const level = this.scene.scene.get('GameScene') as GameScene
-
-        if (level.enemies.countActive() === 1) {
-            this.scene.physics.world.timeScale = 10
-            this.scene.time.timeScale = 10
-            this.scene.cameras.main.setAlpha(0.5)
-            this.scene.scene.launch('VictoryScene', { score: level.score + 100})
-        }
-    }
-
-    private createIncreaseScoreEffect() {
-        const level = this.scene.scene.get('GameScene') as GameScene
-
-        level.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                level.score+=100;
-                level.tweens.add({
-                    targets: level.scoreText,
-                    props: {
-                        scale: 2
-                    },
-                    ease: 'Sine.easeInOut',
-                    duration: 300,
-                    yoyo: true,
-                })
-            }
-        })
-
-        const particleEffects = this.scene.scene.get('particle-effects')
-        particleEffects.events.emit('trail-to', {
-            fromX: this.x ,
-            fromY: this.y,
-            toX: 450 + 200,
-            toY: 50
-        })
-        
-    }
-
-    createGotHitEffect(_x: number, _y:number) {
+    private createGotHitEffect(_x: number, _y:number) {
         var emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
             y: _y,
@@ -246,8 +240,6 @@ export class Enemy extends Phaser.GameObjects.Image {
     private createFire() {
         if (this.fire) return
 
-        this.whiteSmoke.stop();
-        this.darkSmoke.stop();
         this.fire = this.scene.add.particles('fire').createEmitter({
             alpha: { start: 1, end: 0 },
             scale: { start: 0.5, end: 2.5 },

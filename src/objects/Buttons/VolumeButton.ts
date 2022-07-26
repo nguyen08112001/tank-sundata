@@ -1,4 +1,5 @@
 import { IImageConstructor } from '../../interfaces/image.interface';
+import eventsCenter from '../../scenes/EventsCenter';
 import { Button } from './Button';
 
 export class VolumeButton extends Button {
@@ -16,17 +17,16 @@ export class VolumeButton extends Button {
     }
 
     public handlePointerDown() {
-        console.log(this.scene.registry.get('hasSound'))
         if (this.scene.registry.get('hasSound')) 
         {
-            this.setTint(0x808080)
-            this.scene.registry.set('hasSound', false)
-            this.scene.events.emit('setSound');
+            this.setTint(0x808080);
+            this.scene.registry.set('hasSound', false);
+            eventsCenter.emit('update-sound');
         }
         else {
-            this.scene.registry.set('hasSound', true)
-            this.scene.events.emit('setSound');
-            this.clearTint()
+            this.clearTint();
+            this.scene.registry.set('hasSound', true);
+            eventsCenter.emit('update-sound');
         }   
     }
 

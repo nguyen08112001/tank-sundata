@@ -1,16 +1,43 @@
 import { IImageConstructor } from '../../interfaces/image.interface';
+import eventsCenter from '../../scenes/EventsCenter';
 import { GameScene } from '../../scenes/GameScene';
 
-export class Barrel extends Phaser.GameObjects.Image {
+export class Box extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     // variables
     private health: number;
+    private zoneWidth: number;
+    private zoneHeight: number;
+    private damage: number;
 
     // game objects
-    private bullets: Phaser.GameObjects.Group;
-    explosionSound: Phaser.Sound.BaseSound;
-    tween: Phaser.Tweens.Tween;
+    private explosionSound: Phaser.Sound.BaseSound;
+
+    gotDamage(_x: number, _y:number, _damage: number): void {
+        this.health -= _damage;
+        this.createEmitter(_x, _y);
+        this.explode();
+        
+        if (this.health > 0) {
+            
+        } else {
+            this.explode()
+        }
+    }
+
+    explode() {
+        if (!this.active) return;
+
+        this.health = 0;
+        this.active = false;
+        this.setVisible(false)
+        
+        this.emitCreateDeadZoneEvent()
+        this.createExplosionEffect()
+
+        this.destroy()
+    }
 
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
@@ -22,40 +49,22 @@ export class Barrel extends Phaser.GameObjects.Image {
     private initImage() {
         // variables
         this.health = 1;
+        this.zoneWidth = 400;
+        this.zoneHeight = 400;
+        this.damage = 1;
 
         // image
         this.setDepth(0);
 
-        this.explosionSound = this.scene.sound.add('explosion')
+        //sound
+        this.explosionSound = this.scene.sound.add('explosion');
 
         // physics
         this.scene.physics.world.enable(this);
         this.body.setImmovable(true)
     }
 
-    public updateHealth(_x: number, _y:number): void {
-        this.kill()
-        if (this.health > 0) {
-            this.health -= 0.05;
-            
-            this.createEmitter(_x, _y)
-        } else {
-            this.kill()
-        }
-    }
-
-    kill() {
-        if (!this.active) return;
-
-        this.health = 0;
-        this.active = false;
-        this.setVisible(false)
-        
-        this.createDeadZone()
-        this.createExplosionEffect()
-        
-        this.destroy()
-    }
+    
 
     private createExplosionEffect() {
         var particles = this.scene.add.particles('explosion');
@@ -103,24 +112,8 @@ export class Barrel extends Phaser.GameObjects.Image {
         });
         particles.emitParticleAt(this.x, this.y)
     }
-    private createDeadZone() {
-        var zone = this.scene.add.zone(this.x, this.y, 200, 200);
-        this.scene.physics.world.enable(zone, 1); // (0) DYNAMIC (1) STATIC
-        var tmp = this.scene as GameScene
-        this.scene.physics.add.overlap(tmp.player, zone, () => {
-            tmp.player.updateHealth(0,0, 100)
-        })
-        this.scene.physics.add.overlap(tmp.enemies, zone, (_a: any, _b: any) => {
-            _a.health = 0;
-            this.active = false;
-            _a.kill()
-        })
-        this.scene.time.addEvent({
-            delay: 100,
-            callback: () => {
-                zone.destroy();
-            }
-        })
+    private emitCreateDeadZoneEvent() {
+        eventsCenter.emit('bomb-explode', this.x, this.y, this.zoneWidth, this.zoneHeight, this.damage)
     }
 
     private createEmitter(_x: number, _y:number) {
@@ -139,6 +132,4 @@ export class Barrel extends Phaser.GameObjects.Image {
             emitter.stop();
         });
     }
-
-
 }

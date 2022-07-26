@@ -1,22 +1,40 @@
-import { Enemy } from './Enemy';
 import { IBulletConstructor } from '../interfaces/bullet.interface';
-import { GameScene } from '../scenes/GameScene';
+import eventsCenter from '../scenes/EventsCenter';
 
 export class Bomb extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     private bombSpeed: number;
+    private damage: number;
+    private zoneWidth: number;
+    private zoneHeight: number;
 
     constructor(aParams: IBulletConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture);
+
         this.rotation = aParams.rotation;
-        this.initImage();
+        
+        this.init();
         this.scene.add.existing(this);
+
+        this.initExploreCounter();
     }
 
-    private initImage(): void {
+    private initExploreCounter() {
+        this.scene.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                this.explode();
+            }
+        })
+    }
+
+    private init(): void {
         // variables
         this.bombSpeed = 1000;
+        this.damage = 1;
+        this.zoneWidth = 300;
+        this.zoneHeight = 300;
 
         // image
         this.setOrigin(0.5, 0.5);
@@ -43,8 +61,8 @@ export class Bomb extends Phaser.GameObjects.Image {
     }
 
 
-    kill() {
-        this.createDeadZone();
+    private explode() {
+        this.pushCreateDeadZoneEvent();
         this.createExplosionEmitter();
         this.destroy();
     }
@@ -98,21 +116,7 @@ export class Bomb extends Phaser.GameObjects.Image {
     }
 
 
-    private createDeadZone() {
-        var zone = this.scene.add.zone(this.x, this.y, 200, 200);
-        this.scene.physics.world.enable(zone, 1); // (0) DYNAMIC (1) STATIC
-        var gameScene = this.scene as GameScene;
-        this.scene.physics.add.overlap(gameScene.player, zone, () => {
-            gameScene.player.updateHealth(0,0, 100);
-        })
-        this.scene.physics.add.overlap(gameScene.enemies, zone, (_enemy: Enemy, _zone: any) => {
-            _enemy.kill();
-        })
-        this.scene.time.addEvent({
-            delay: 100,
-            callback: () => {
-                zone.destroy()
-            }
-        })
+    private pushCreateDeadZoneEvent() {
+        eventsCenter.emit('bomb-explode', this.x, this.y, this.zoneWidth, this.zoneHeight, this.damage)
     }
 }
