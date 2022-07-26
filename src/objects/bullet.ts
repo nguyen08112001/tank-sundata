@@ -4,6 +4,7 @@ export class Bullet extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     private bulletSpeed: number;
+    public damage: number;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
 
     constructor(aParams: IBulletConstructor) {
@@ -11,6 +12,7 @@ export class Bullet extends Phaser.GameObjects.Image {
 
         this.rotation = aParams.rotation;
         this.initImage();
+        this.damage = aParams.damage;
         this.scene.add.existing(this);
     }
 

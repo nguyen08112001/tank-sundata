@@ -5,4 +5,5 @@ export interface IBulletConstructor {
   y: number;
   texture: string;
   frame?: string | number;
+  damage: number;
 }

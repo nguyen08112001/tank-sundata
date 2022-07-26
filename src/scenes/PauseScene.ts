@@ -28,7 +28,6 @@ export class PauseScene extends Phaser.Scene {
         
         this.add.image(this.sys.canvas.width / 2,this.sys.canvas.height / 2, 'pause')
 
-
         new CloseButton({
             scene: this,
             x: this.sys.canvas.width - 300 ,

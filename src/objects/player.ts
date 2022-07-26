@@ -8,9 +8,11 @@ export class Player extends Phaser.GameObjects.Container {
 
     // variables
     public health: number;
-    private lastShoot: number;
+    private nextShoot: number;
     private speed: number;
     private nextBomb: number;
+    damage: number;
+
 
     // children
     private barrel: Phaser.GameObjects.Image;
@@ -71,7 +73,7 @@ export class Player extends Phaser.GameObjects.Container {
 
         // variables
         this.health = 1;
-        this.lastShoot = 0;
+        this.nextShoot = 0;
         this.nextBomb = 0;
         this.speed = 300;
 
@@ -153,7 +155,8 @@ export class Player extends Phaser.GameObjects.Container {
                 rotation: this.barrel.rotation,
                 x: this.x,
                 y: this.y,
-                texture: 'bomb'
+                texture: 'bomb',
+                damage: 100
             });
             this.bombs.add(bomb)
 
@@ -197,7 +200,7 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     private handleShooting(): void {
-        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.lastShoot && this.bullets.getLength() < 10) {
+        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
 
             const level = this.scene.scene.get('GameScene') as GameScene
             if (level.score > 0)
@@ -225,11 +228,12 @@ export class Player extends Phaser.GameObjects.Container {
                     rotation: this.barrel.rotation,
                     x: this.x,
                     y: this.y,
-                    texture: 'bulletBlue'
+                    texture: 'bulletBlue',
+                    damage: this.damage
                 })
             )
 
-            this.lastShoot = this.scene.time.now + 80;
+            this.nextShoot = this.scene.time.now + 80;
             
         }
     }

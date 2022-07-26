@@ -8,7 +8,8 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     // variables
     private health: number;
-    private lastShoot: number;
+    private nextShoot: number;
+    public damage: number;
 
     // children
     private barrel: Phaser.GameObjects.Image;
@@ -21,8 +22,6 @@ export class Enemy extends Phaser.GameObjects.Image {
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
-    // private hasSmoke: boolean = false;
-    // private hasFire: boolean = false;
 
     public getBarrel(): Phaser.GameObjects.Image {
         return this.barrel;
@@ -42,7 +41,8 @@ export class Enemy extends Phaser.GameObjects.Image {
     private initContainer() {
         // variables
         this.health = 1;
-        this.lastShoot = 0;
+        this.nextShoot = 0;
+        this.damage = 0.5
 
         // image
         this.setDepth(0);
@@ -51,6 +51,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.barrel.setOrigin(0.5, 1);
         this.barrel.setDepth(1);
 
+        //sound
         this.explosionSound = this.scene.sound.add('explosion');
 
         this.lifeBar = this.scene.add.graphics();
@@ -97,7 +98,7 @@ export class Enemy extends Phaser.GameObjects.Image {
     }
 
     private handleShooting(): void {
-        if (this.scene.time.now > this.lastShoot && this.bullets.getLength() < 10) {
+        if (this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
 
             this.bullets.add(
                 new Bullet({
@@ -105,11 +106,12 @@ export class Enemy extends Phaser.GameObjects.Image {
                     rotation: this.barrel.rotation,
                     x: this.barrel.x,
                     y: this.barrel.y,
-                    texture: 'bulletRed'
+                    texture: 'bulletRed',
+                    damage: this.damage
                 })
             );
 
-            this.lastShoot = this.scene.time.now + 400;
+            this.nextShoot = this.scene.time.now + 400;
         }
     }
 
@@ -132,7 +134,7 @@ export class Enemy extends Phaser.GameObjects.Image {
             this.health -= 0.05;
             this.reDrawLifebar();
 
-            this.createEmitter(_x, _y)
+            this.createGotHitEffect(_x, _y)
 
             if (this.health <= 0.7) {
                 this.createSmoke()
@@ -150,7 +152,6 @@ export class Enemy extends Phaser.GameObjects.Image {
 
         this.createDeadEffect();
         this.createIncreaseScoreEffect();
-
         this.checkEndGame();
     }
     private createDeadEffect() {
@@ -195,7 +196,7 @@ export class Enemy extends Phaser.GameObjects.Image {
             this.scene.physics.world.timeScale = 10
             this.scene.time.timeScale = 10
             this.scene.cameras.main.setAlpha(0.5)
-            this.scene.scene.launch('VictoryScene', { score: level.score })
+            this.scene.scene.launch('VictoryScene', { score: level.score + 100})
         }
     }
 
@@ -228,7 +229,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         
     }
 
-    createEmitter(_x: number, _y:number) {
+    createGotHitEffect(_x: number, _y:number) {
         var emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
             y: _y,
@@ -239,10 +240,7 @@ export class Enemy extends Phaser.GameObjects.Image {
             //active: false,
             lifespan: 200,
             gravityY: 800,
-        });
-        this.scene.time.delayedCall(200, ()=>{
-            emitter.stop();
-        });
+        }).explode(10, _x, _y);
     }
 
     private createFire() {
