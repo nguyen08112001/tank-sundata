@@ -48,7 +48,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     create(): void {
-
         this.cameras.main.fadeIn();
 
         this.createMap();
@@ -56,10 +55,11 @@ export class GameScene extends Phaser.Scene {
         this.createColliderAndOverlap();
         this.createUI();
         this.setSound();
-        this.createMiniMap()
+        // this.createMiniMap()
         this.initEventListener();
 
         this.cameras.main.startFollow(this.player);
+        this.cameras.main.setZoom(0.6)
     }
 
     update(): void {
@@ -70,15 +70,14 @@ export class GameScene extends Phaser.Scene {
             enemy.update(this.player.body.x, this.player.body.y);
         }, this);
 
-        this.updateMiniMap();
+        // this.updateMiniMap();
     }
 
     private createMiniMap() {
-        this.minimap = this.cameras.add(0, 10, 400, 400).setZoom(0.2).setName('mini').setAlpha(0.8);
+        this.minimap = this.cameras.add(0, 10, this.sys.canvas.width /10, this.sys.canvas.height / 10).setZoom(0.2).setName('mini').setAlpha(0.8);
         this.minimap.setBackgroundColor(0x002244);
         this.minimap.scrollX = 1600;
         this.minimap.scrollY = 300;
-
         this.minimap.ignore(this.scoreText)
     }
     private createUI() {

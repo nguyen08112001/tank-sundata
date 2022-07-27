@@ -3,6 +3,8 @@ import { IImageConstructor } from '../interfaces/image.interface';
 import { GameScene } from '../scenes/GameScene';
 import { Bomb } from './Bomb';
 import eventsCenter from '../scenes/EventsCenter';
+import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
+
 
 export class Player extends Phaser.GameObjects.Container {
     body: Phaser.Physics.Arcade.Body;
@@ -24,7 +26,6 @@ export class Player extends Phaser.GameObjects.Container {
     private bombs: Phaser.GameObjects.Group;
 
     // input
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private moveKeyLeft: Phaser.Input.Keyboard.Key;
     private moveKeyRight: Phaser.Input.Keyboard.Key;
     private moveKeyUp: Phaser.Input.Keyboard.Key;
@@ -43,6 +44,9 @@ export class Player extends Phaser.GameObjects.Container {
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
+    private moveJoystick: VirtualJoystick;
+    shootingJoystick: VirtualJoystick;
+    isMobileDevice: boolean = true;
     
 
     getBullets(): Phaser.GameObjects.Group {
@@ -79,7 +83,6 @@ export class Player extends Phaser.GameObjects.Container {
 
     update(): void {
         this.updateLifebar()
-        this.updateBarrel();
         this.handleInput();
         this.updateState();
     }
@@ -104,7 +107,6 @@ export class Player extends Phaser.GameObjects.Container {
     }
     private initInput() {
         // input
-        this.cursors = this.scene.input.keyboard.createCursorKeys();
         this.moveKeyLeft = this.scene.input.keyboard.addKey(
             Phaser.Input.Keyboard.KeyCodes.A
         );
@@ -120,7 +122,26 @@ export class Player extends Phaser.GameObjects.Container {
         this.spaceKey = this.scene.input.keyboard.addKey(
             Phaser.Input.Keyboard.KeyCodes.SPACE
         );
+        this.moveJoystick = this.createJoyStick(0, this.scene.sys.canvas.height - 100)
+        this.shootingJoystick = this.createJoyStick(this.scene.sys.canvas.width , this.scene.sys.canvas.height - 100)
+        if (!this.scene.sys.game.device.input.touch) {
+            this.isMobileDevice = false;
+            this.moveJoystick.setVisible(false);
+            this.shootingJoystick.setVisible(false);
+        }
+        
     }
+
+    private createJoyStick(x: number, y: number) {
+        return new VirtualJoystick(this.scene, {
+            x: x, 
+            y: y,
+            radius: 50,
+            base: this.scene.add.circle(0, 0, 100, 0xff00ff),
+            thumb: this.scene.add.circle(0, 0, 50, 0xffffff)
+        })
+    }
+
     private initSound() {
         //sound
         this.shootSound = this.scene.sound.add('shoot');
@@ -196,73 +217,131 @@ export class Player extends Phaser.GameObjects.Container {
 
     private handleInput() {
         this.handleMove();
+        this.updateBarrel();
         this.handleShooting();
         this.handleBomb();
     }
 
     private handleMove() {
-        if (this.cursors.up.isDown || this.moveKeyUp.isDown) {
-            this.body.setVelocityY(-this.speed)
-        } else if (this.cursors.down.isDown || this.moveKeyDown.isDown) {
-            this.body.setVelocityY(this.speed)
-        } else {
-            this.body.setVelocityY(0);
-        }
+        
 
-        if (this.cursors.left.isDown || this.moveKeyLeft.isDown) {
-            this.body.setVelocityX(-this.speed)
-        } else if (this.cursors.right.isDown || this.moveKeyRight.isDown) {
-            this.body.setVelocityX(this.speed)
+        if(this.moveJoystick.force!=0){
+            this.tank.rotation = this.moveJoystick.rotation - Phaser.Math.DegToRad(90);
+            this.scene.physics.velocityFromRotation(this.moveJoystick.rotation, this.speed, this.body.velocity);
+
         } else {
-            this.body.setVelocityX(0);
+            if (this.moveKeyUp.isDown) {
+                this.body.setVelocityY(-this.speed)
+            } else if (this.moveKeyDown.isDown) {
+                this.body.setVelocityY(this.speed)
+            } else {
+                this.body.setVelocityY(0);
+            }
+    
+            if ( this.moveKeyLeft.isDown) {
+                this.body.setVelocityX(-this.speed)
+            } else if (this.moveKeyRight.isDown) {
+                this.body.setVelocityX(this.speed)
+            } else {
+                this.body.setVelocityX(0);
+            }
         }
     }
-
     private updateBarrel() {
-        this.barrel.rotation = Phaser.Math.Angle.Between(
-            this.x,
-            this.y,
-            this.scene.input.activePointer.worldX,
-            this.scene.input.activePointer.worldY,
-        ) + Math.PI / 2
+        if (this.shootingJoystick !== undefined) {
+            if(this.shootingJoystick.force!=0){
+                this.barrel.rotation = this.shootingJoystick.rotation + Phaser.Math.DegToRad(90);
+            }
+        } 
+        else {
+            this.barrel.rotation = Phaser.Math.Angle.Between(
+                this.x,
+                this.y,
+                this.scene.input.activePointer.worldX,
+                this.scene.input.activePointer.worldY,
+            ) + Math.PI / 2
+        }
+        
     }
 
     private handleShooting(): void {
-        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
+        if (!this.isMobileDevice) {
+            console.log(123)
+            if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10)
+            {
 
-            eventsCenter.emit('change-core', -1);
+                eventsCenter.emit('change-core', -1);
 
-            this.shootSound.play({
-                volume: 0.3
-            })
-            this.scene.tweens.add({
-                targets: this,
-                props: { alpha: 0.8 },
-                delay: 0,
-                duration: 5,
-                ease: 'Power1',
-                easeParams: null,
-                hold: 0,
-                repeat: 0,
-                repeatDelay: 0,
-                yoyo: true,
-                paused: false
-            });
-
-            this.bullets.add(
-                new Bullet({
-                    scene: this.scene,
-                    rotation: this.barrel.rotation,
-                    x: this.x,
-                    y: this.y,
-                    texture: 'bulletBlue',
-                    damage: this.damage
+                this.shootSound.play({
+                    volume: 0.3
                 })
-            )
+                this.scene.tweens.add({
+                    targets: this,
+                    props: { alpha: 0.8 },
+                    delay: 0,
+                    duration: 5,
+                    ease: 'Power1',
+                    easeParams: null,
+                    hold: 0,
+                    repeat: 0,
+                    repeatDelay: 0,
+                    yoyo: true,
+                    paused: false
+                });
 
-            this.nextShoot = this.scene.time.now + 80;
-            
+                this.bullets.add(
+                    new Bullet({
+                        scene: this.scene,
+                        rotation: this.barrel.rotation,
+                        x: this.x,
+                        y: this.y,
+                        texture: 'bulletBlue',
+                        damage: this.damage
+                    })
+                )
+
+                this.nextShoot = this.scene.time.now + 80;
+                
+            }
+        } else {
+            if (this.shootingJoystick !== undefined && this.shootingJoystick?.force !== 0 && this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10)
+            {
+
+                eventsCenter.emit('change-core', -1);
+
+                this.shootSound.play({
+                    volume: 0.3
+                })
+                this.scene.tweens.add({
+                    targets: this,
+                    props: { alpha: 0.8 },
+                    delay: 0,
+                    duration: 5,
+                    ease: 'Power1',
+                    easeParams: null,
+                    hold: 0,
+                    repeat: 0,
+                    repeatDelay: 0,
+                    yoyo: true,
+                    paused: false
+                });
+
+                this.bullets.add(
+                    new Bullet({
+                        scene: this.scene,
+                        rotation: this.barrel.rotation,
+                        x: this.x,
+                        y: this.y,
+                        texture: 'bulletBlue',
+                        damage: this.damage
+                    })
+                )
+
+                this.nextShoot = this.scene.time.now + 80;
+                
+            }
         }
+        
     }
 
     private updateLifebar(): void {
