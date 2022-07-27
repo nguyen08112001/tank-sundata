@@ -1,13 +1,16 @@
 import { Player } from '../objects/Player';
-import { Enemy } from '../objects/Enemy';
+import { Enemy } from '../objects/Enemies/Enemy';
 import { Obstacle } from '../objects/obstacles/Obstacle';
 import { Bullet } from '../objects/Bullet';
 import { Shield } from '../objects/Shield';
 import { Box } from '../objects/obstacles/Box';
 import eventsCenter from './EventsCenter';
 import { SettingsButton } from '../objects/Buttons/SettingsButton';
-import { SpeedTank } from '../objects/SpeedTank';
+import { BigDamageTank } from '../objects/Enemies/BigDamageTank';
+import { HugeTank } from '../objects/Enemies/HugeTank';
+import { GhostTank } from '../objects/Enemies/GhostTank';
 
+const kindOfEnemy: string[] = ['BigDamageTank', 'HugeTank', 'GhostTank']
 export class GameScene extends Phaser.Scene {
     //map
     private map: Phaser.Tilemaps.Tilemap;
@@ -108,6 +111,10 @@ export class GameScene extends Phaser.Scene {
         // collider layer and obstacles
         this.physics.add.collider(this.player, this.layer);
         this.physics.add.collider(this.player, this.obstacles);
+        
+        this.physics.add.collider(this.enemies, this.layer);
+        this.physics.add.collider(this.enemies, this.obstacles);
+
         this.physics.add.collider(this.player.getBombs(), this.layer);
 
         // collider for bullets
@@ -265,7 +272,7 @@ export class GameScene extends Phaser.Scene {
         })
         this.physics.add.overlap(this.enemies, zone, (_enemy: Enemy, _zone: any) => {
             zone.destroy();
-            _enemy.setDead();
+            _enemy.gotDamage(_x, _y, _damage);
         })
         this.time.addEvent({
             delay: 20,
@@ -364,12 +371,37 @@ export class GameScene extends Phaser.Scene {
     }
 
     private createNewEnemy(_x: number, _y: number) {
-        let enemy = new SpeedTank({
-            scene: this,
-            x: _x,
-            y: _y,
-            texture: 'tankRed'
-        });
+        var tmp = 'BigDamageTank';
+        let enemy;
+
+        switch (kindOfEnemy[Math.floor(Math.random()*kindOfEnemy.length)]) {
+
+            case 'BigDamageTank':
+                enemy = new BigDamageTank({
+                    scene: this,
+                    x: _x,
+                    y: _y,
+                    texture: 'tankRed'
+                });
+                break;
+            case 'HugeTank':
+                enemy = new HugeTank({
+                    scene: this,
+                    x: _x,
+                    y: _y,
+                    texture: 'tankRed'
+                });
+                break;
+            case 'GhostTank':
+                enemy = new GhostTank({
+                    scene: this,
+                    x: _x,
+                    y: _y,
+                    texture: 'tankRed'
+                });
+                break;
+        }
+
         this.enemies.add(enemy);
     }
 

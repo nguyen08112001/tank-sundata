@@ -1,23 +1,23 @@
-import { Bullet } from './Bullet';
-import { IImageConstructor } from '../interfaces/image.interface';
-import eventsCenter from '../scenes/EventsCenter';
+import { Bullet } from '../Bullet';
+import { IImageConstructor } from '../../interfaces/image.interface';
+import eventsCenter from '../../scenes/EventsCenter';
 
 export class Enemy extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     // variables
-    private health: number;
-    private nextShoot: number;
+    protected health: number;
+    protected nextShoot: number;
     protected damage: number;
 
     // children
     protected barrel: Phaser.GameObjects.Image;
-    private lifeBar: Phaser.GameObjects.Graphics;
+    protected lifeBar: Phaser.GameObjects.Graphics;
 
     // game objects
+    protected tween: Phaser.Tweens.Tween;
     private bullets: Phaser.GameObjects.Group;
     private explosionSound: Phaser.Sound.BaseSound;
-    private tween: Phaser.Tweens.Tween;
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -33,9 +33,7 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     setDead() {
         this.body.checkCollision.none = true;
-
         this.createDeadEffectAndSetActive();
-        
         eventsCenter.emit('enemy-dead', this.x, this.y);
     }
 
@@ -52,13 +50,12 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
-
         this.init();
         this.scene.add.existing(this);
     }
 
     update(_playerX: number, _playerY: number): void {
-        
+        this.reDrawLifebar();
         if (this.active) {
             this.updateTankImage(_playerX, _playerY);
             this.handleShooting();
@@ -87,7 +84,6 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.explosionSound = this.scene.sound.add('explosion');
 
         this.lifeBar = this.scene.add.graphics();
-        this.reDrawLifebar();
 
         // game objects
         this.bullets = this.scene.add.group({
@@ -121,13 +117,16 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.updateSmokeEffect()
     }
     private updateSmokeEffect() {
+        if (this.health <= 0) {
+            this.stopAllSmokeEffect()
+        }
         if (this.health <= 0.7) {
             this.createSmoke();
         } 
-        if (this.health <= 0.4) {
+        else if (this.health <= 0.4) {
             this.whiteSmoke.stop();
             this.darkSmoke.stop();
-            this.createFire();
+            this.createFireEffect();
         }
     }
     private updateLifeBar() {
@@ -186,10 +185,6 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     private createDeadEffectAndSetActive() {
         this.tween.stop();
-
-        this.fire?.stop();
-        this.whiteSmoke?.stop();
-        this.darkSmoke?.stop();
         
         this.scene.tweens.add({
             targets: this,
@@ -223,6 +218,12 @@ export class Enemy extends Phaser.GameObjects.Image {
         });
     }
 
+    private stopAllSmokeEffect() {
+        this.fire?.stop();
+        this.whiteSmoke?.stop();
+        this.darkSmoke?.stop();
+    }
+
     private createGotHitEffect(_x: number, _y:number) {
         var emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
@@ -237,7 +238,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         }).explode(10, _x, _y);
     }
 
-    private createFire() {
+    private createFireEffect() {
         if (this.fire) return
 
         this.fire = this.scene.add.particles('fire').createEmitter({

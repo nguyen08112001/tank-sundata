@@ -12,7 +12,8 @@
     "webpack-dev-server": "3.11.2"
   },
   "dependencies": {
-    "phaser": "3.55.2"
+    "phaser": "3.55.2",
+    "phaser3-rex-plugins": "^1.1.71"
   },
   "scripts": {
     "dev": "webpack --mode development && webpack serve --mode development"
