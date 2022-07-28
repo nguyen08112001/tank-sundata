@@ -5,9 +5,16 @@ export class HugeTank extends Enemy {
     constructor(aParams: IImageConstructor) {
         super(aParams);
         this.customConfig();
+        this.customParentProperties()
     }
-    private customConfig() {
+
+    private customParentProperties() {
+        this.deadPoint = 200;
         this.damage /= 2;
+    }
+
+    private customConfig() {
+        
         this.setTint(0x5a5a5a);
         this.barrel.setTint(0x5a5a5a);
         this.setScale(1.5);

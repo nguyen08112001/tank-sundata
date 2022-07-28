@@ -1,4 +1,4 @@
-import { Bullet } from '../Bullet';
+import { Bullet, BulletsPool } from '../Bullet';
 import { IImageConstructor } from '../../interfaces/image.interface';
 import eventsCenter from '../../scenes/EventsCenter';
 
@@ -9,6 +9,8 @@ export class Enemy extends Phaser.GameObjects.Image {
     protected health: number;
     protected nextShoot: number;
     protected damage: number;
+    protected bulletTexture: string;
+    protected deadPoint: number;
 
     // children
     protected barrel: Phaser.GameObjects.Image;
@@ -16,7 +18,7 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     // game objects
     protected tween: Phaser.Tweens.Tween;
-    private bullets: Phaser.GameObjects.Group;
+    private bullets: BulletsPool;
     private explosionSound: Phaser.Sound.BaseSound;
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
@@ -75,7 +77,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         // variables
         this.health = 1;
         this.nextShoot = 0;
-        this.damage = 0.05
+        this.damage = 0.05;
         this.shootingDelayTime = 400;
 
         // image
@@ -91,18 +93,10 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.lifeBar = this.scene.add.graphics();
 
         // game objects
-        this.bullets = this.scene.add.group({
-            /*classType: Bullet,*/
-            active: true,
-            maxSize: 10,
-            runChildUpdate: true
-        });
-
-        for (var i = 0; i < 10; i++ ) {
-            this.bullets.add(
-                this.createNewBullet()
-            )
-        }
+        this.bullets = new BulletsPool(this.scene,  {
+            texture: this.bulletTexture || 'bulletRed',
+            damage: this.damage
+        })
 
         // tweens
         this.tween = this.scene.tweens.add({

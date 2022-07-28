@@ -57,10 +57,10 @@ export class GameScene extends Phaser.Scene {
         this.createUI();
         this.setSound();
         this.createMiniMap()
+        this.createMainCamera()
         this.initEventListener();
-
-        this.cameras.main.startFollow(this.player);
     }
+    
 
     update(): void {
         this.updateScore();
@@ -72,6 +72,16 @@ export class GameScene extends Phaser.Scene {
         }, this);
 
         this.updateMiniMap();
+    }
+
+    private createMainCamera() {
+        this.cameras.main.startFollow(this.player);
+        this.cameras.main.setBounds(
+            0,
+            0,
+            this.map.widthInPixels,
+            this.map.heightInPixels
+        );
     }
 
     private createMiniMap() {

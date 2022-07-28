@@ -68,6 +68,11 @@
             },
             {
                 "type": "image",
+                "key": "shield-white",
+                "url": "./assets/sprites/shieldWhite.png"
+            },
+            {
+                "type": "image",
                 "key": "tiles",
                 "url": "./assets/tiles/tiles.png"
             },

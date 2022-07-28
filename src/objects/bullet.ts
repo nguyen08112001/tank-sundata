@@ -5,18 +5,21 @@ export class Bullet extends Phaser.GameObjects.Image {
 
     private speed: number;
     private damage: number;
-    private fireEffect: Phaser.GameObjects.Particles.ParticleEmitter;
+    fireEffect: Phaser.GameObjects.Particles.ParticleEmitter;
 
     getDamage() {
         return this.damage;
     }
 
+    setDamage(_newDamage: number) {
+        this.damage = _newDamage;
+    }
+
     gotHit() {
-        this.fireEffect?.stop()
+        this.fireEffect?.setVisible(false)
         this.setVisible(false);
         this.setActive(false)
         this.body.enable = false;
-        // this.destroy()
     }
 
     reInitWithAngle(_rotation: number) {
@@ -32,6 +35,8 @@ export class Bullet extends Phaser.GameObjects.Image {
             .setVisible(true)
 
         this.body.enable = true;
+
+        this.fireEffect?.setVisible(true)
     }
 
     constructor(aParams: IBulletConstructor) {
@@ -41,7 +46,7 @@ export class Bullet extends Phaser.GameObjects.Image {
         this.init();
         this.damage = aParams.damage;
         this.scene.add.existing(this);
-        
+
         this.body.enable = false;
         this.setActive(false)
         this.setVisible(false)
@@ -70,16 +75,47 @@ export class Bullet extends Phaser.GameObjects.Image {
         var particles = this.scene.add.particles('flares');
 
         this.fireEffect = particles.createEmitter({
-            frame: 'yellow',
+            frame: 'red',
             radial: false,
             lifespan: 100,
-            // speedX: { min: 200, max: 400 }, 
+            speedX: { min: 200, max: 400 }, 
             quantity: 4,
-            // gravityY: -50,
+            gravityY: -50,
             scale: { start: 0.6, end: 0, ease: 'Power3' },
             blendMode: 'ADD',
             follow: this
-        });
+        }).setVisible(false);
     }
     
+}
+
+export class BulletsPool extends Phaser.GameObjects.Group {
+
+    constructor(scene: Phaser.Scene, customBulletConfig: any, config: Phaser.Types.GameObjects.Group.GroupConfig = {})
+	{
+
+		const defaults: Phaser.Types.GameObjects.Group.GroupConfig = {
+			active: false,
+            maxSize: 10,
+            runChildUpdate: true
+		}
+
+		super(scene, Object.assign(defaults, config));
+        this.createBulletsWithConfig(customBulletConfig)
+        
+	}
+    private createBulletsWithConfig(customBulletConfig: any) {
+        for (var i = 0; i < this.maxSize; i++ ) {
+            this.add(
+                new Bullet({
+                    scene: this.scene,
+                    rotation: -1,
+                    x: -1,
+                    y: -1,
+                    texture: customBulletConfig.texture,
+                    damage: customBulletConfig.damage
+                })
+            )
+        }
+    }
 }

@@ -1,7 +1,7 @@
-import { Bullet } from './Bullet';
+import { Bullet, BulletsPool } from './Bullet';
 import { IImageConstructor } from '../interfaces/image.interface';
 import { GameScene } from '../scenes/GameScene';
-import { Bomb } from './Bomb';
+import { Bomb, BombsPool } from './Bomb';
 import eventsCenter from '../scenes/EventsCenter';
 
 export class Player extends Phaser.GameObjects.Container {
@@ -13,6 +13,8 @@ export class Player extends Phaser.GameObjects.Container {
     private speed: number;
     private nextBomb: number;
     private damage: number;
+    private shootingDelayTime: number;
+
 
     // children
     private barrel: Phaser.GameObjects.Image;
@@ -20,8 +22,8 @@ export class Player extends Phaser.GameObjects.Container {
     private tank: Phaser.GameObjects.Image;
 
     // game objects
-    private bullets: Phaser.GameObjects.Group;
-    private bombs: Phaser.GameObjects.Group;
+    private bullets: BulletsPool;
+    private bombs: BombsPool;
 
     // input
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -131,6 +133,7 @@ export class Player extends Phaser.GameObjects.Container {
         this.nextBomb = 0;
         this.speed = 300;
         this.damage = 0.05;
+        this.shootingDelayTime = 80;
         this.setShield(false);
     }
     private initWeaponObject() {
@@ -141,32 +144,13 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     private initBombsPool() {
-        this.bombs = this.scene.add.group({
-            /*classType: Bomb*/
-            active: false,
-            maxSize: 10,
-            runChildUpdate: true
-        });
-
-        for (var i = 0; i < 10; i++ ) {
-            this.bombs.add(
-                this.createNewBomb()
-            )
-        }
+        this.bombs = new BombsPool(this.scene);
     }
     private initBulletsPool() {
-        this.bullets = this.scene.add.group({
-            // classType: Bullet,
-            active: false,
-            maxSize: 10,
-            runChildUpdate: true
+        this.bullets = new BulletsPool(this.scene, {
+            texture: 'bulletBlue',
+            damage: this.damage,
         });
-
-        for (var i = 0; i < 10; i++ ) {
-            this.bullets.add(
-                this.createNewBullet()
-            )
-        }
     }
 
     private createNewBullet() {
@@ -285,10 +269,9 @@ export class Player extends Phaser.GameObjects.Container {
                 });
 
                 this.addShootingEffect();
-
                 bullet.reInitWithAngle(this.barrel.rotation);
 
-                this.nextShoot = this.scene.time.now + 80;
+                this.nextShoot = this.scene.time.now + this.shootingDelayTime;
             }
         }
     }
