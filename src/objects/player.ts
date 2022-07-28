@@ -195,7 +195,7 @@ export class Player extends Phaser.GameObjects.Container {
     private handleBomb() {
         if (this.spaceKey.isDown && this.scene.time.now > this.nextBomb) {
 
-            var bomb = this.bombs.get(this.x, this.y) as Bomb
+            let bomb = this.bombs.get(this.x, this.y) as Bomb
                 
             if (bomb) {
             //if bullet exists
@@ -258,7 +258,7 @@ export class Player extends Phaser.GameObjects.Container {
 
     private handleShooting(): void {
         if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot) {
-            var bullet = this.bullets.get(this.x, this.y) as Bullet
+            let bullet = this.bullets.get(this.x, this.y) as Bullet
                 
             if (bullet) {
             //if bullet exists
@@ -323,7 +323,7 @@ export class Player extends Phaser.GameObjects.Container {
             }
         })
 
-        var emitter = this.scene.add.particles('blue-spark').createEmitter({
+        let emitter = this.scene.add.particles('blue-spark').createEmitter({
             x: _x,
             y: _y,
             speed: { min: -800, max: 800 },

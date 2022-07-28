@@ -72,7 +72,7 @@ export class Bullet extends Phaser.GameObjects.Image {
 
     
     createFireEffect() {
-        var particles = this.scene.add.particles('flares');
+        let particles = this.scene.add.particles('flares');
 
         this.fireEffect = particles.createEmitter({
             frame: 'red',
@@ -105,7 +105,7 @@ export class BulletsPool extends Phaser.GameObjects.Group {
         
 	}
     private createBulletsWithConfig(customBulletConfig: any) {
-        for (var i = 0; i < this.maxSize; i++ ) {
+        for (let i = 0; i < this.maxSize; i++ ) {
             this.add(
                 new Bullet({
                     scene: this.scene,

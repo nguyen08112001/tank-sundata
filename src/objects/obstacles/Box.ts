@@ -67,7 +67,7 @@ export class Box extends Phaser.GameObjects.Image {
     
 
     private createExplosionEffect() {
-        var particles = this.scene.add.particles('explosion');
+        let particles = this.scene.add.particles('explosion');
 
         particles.createEmitter({
             frame: [ 'smoke-puff', 'cloud', 'smoke-puff' ],
@@ -117,7 +117,7 @@ export class Box extends Phaser.GameObjects.Image {
     }
 
     private createEmitter(_x: number, _y:number) {
-        var emitter = this.scene.add.particles('red-spark').createEmitter({
+        let emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
             y: _y,
             speed: { min: -800, max: 800 },

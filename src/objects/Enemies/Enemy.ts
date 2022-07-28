@@ -6,11 +6,13 @@ export class Enemy extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     // variables
-    protected health: number;
-    protected nextShoot: number;
-    protected damage: number;
+    protected health: number = 1;
+    protected nextShoot: number = 0;
+    protected damage: number = 0.05;
     protected bulletTexture: string;
-    protected deadPoint: number;
+    protected deadPoint: number = 100;
+    private shootingDelayTime: number = 400;
+
 
     // children
     protected barrel: Phaser.GameObjects.Image;
@@ -23,7 +25,6 @@ export class Enemy extends Phaser.GameObjects.Image {
     private whiteSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private darkSmoke: Phaser.GameObjects.Particles.ParticleEmitter;
     private fire: Phaser.GameObjects.Particles.ParticleEmitter;
-    private shootingDelayTime: number;
 
     getBarrel(): Phaser.GameObjects.Image {
         return this.barrel;
@@ -54,7 +55,6 @@ export class Enemy extends Phaser.GameObjects.Image {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
         this.init();
         this.scene.add.existing(this);
-
         this.once('destroy', this.onDestroy, this);
     }
 
@@ -71,33 +71,26 @@ export class Enemy extends Phaser.GameObjects.Image {
     private onDestroy () {
         this.barrel.destroy();
         this.lifeBar.destroy();
-      }
+    }
 
-    private init() {
+    private initProperties() {
         // variables
         this.health = 1;
         this.nextShoot = 0;
         this.damage = 0.05;
         this.shootingDelayTime = 400;
+    }
 
-        // image
-        this.setDepth(0);
+    private init() {
+        this.initContainer();
 
-        this.barrel = this.scene.add.image(0, 0, 'barrelRed');
-        this.barrel.setOrigin(0.5, 1);
-        this.barrel.setDepth(1);
+        // this.initProperties()
 
-        //sound
-        this.explosionSound = this.scene.sound.add('explosion');
+        this.initWeapons();
 
-        this.lifeBar = this.scene.add.graphics();
-
-        // game objects
-        this.bullets = new BulletsPool(this.scene,  {
-            texture: this.bulletTexture || 'bulletRed',
-            damage: this.damage
-        })
-
+        this.initBehavior();
+    }
+    private initBehavior() {
         // tweens
         this.tween = this.scene.tweens.add({
             targets: this,
@@ -111,9 +104,31 @@ export class Enemy extends Phaser.GameObjects.Image {
             repeatDelay: 0,
             yoyo: true
         });
+    }
+    private initContainer() {
+        // image
+        this.setDepth(0);
+
+        this.barrel = this.scene.add.image(0, 0, 'barrelRed');
+        this.barrel.setOrigin(0.5, 1);
+        this.barrel.setDepth(1);
+
+        //sound
+        this.explosionSound = this.scene.sound.add('explosion');
+
+        this.lifeBar = this.scene.add.graphics();
 
         // physics
         this.scene.physics.world.enable(this);
+    }
+    private initWeapons() {
+        // game objects
+
+        console.log(this.damage)
+        this.bullets = new BulletsPool(this.scene,  {
+            texture: this.bulletTexture || 'bulletRed',
+            damage: this.damage
+        })
     }
 
     private createNewBullet() {
@@ -156,7 +171,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.barrel.x = this.x;
         this.barrel.y = this.y;
         if (this.active) {
-            var angle = Phaser.Math.Angle.Between(
+            let angle = Phaser.Math.Angle.Between(
             this.body.x,
             this.body.y,
             _playerX,
@@ -172,7 +187,7 @@ export class Enemy extends Phaser.GameObjects.Image {
     private handleShooting(): void {
         if (this.scene.time.now > this.nextShoot) {
 
-            var bullet = this.bullets.get(this.x, this.y) as Bullet
+            let bullet = this.bullets.get(this.x, this.y) as Bullet
                 
             if (bullet) {
                 //if bullet exists
@@ -215,7 +230,7 @@ export class Enemy extends Phaser.GameObjects.Image {
             }
         })
 
-        var particles = this.scene.add.particles('flares').createEmitter({
+        let particles = this.scene.add.particles('flares').createEmitter({
             frame: 'red',
             x: this.x, y: this.y,
             lifespan: { min: 600, max: 800 },
@@ -239,7 +254,7 @@ export class Enemy extends Phaser.GameObjects.Image {
     }
 
     private createGotHitEffect(_x: number, _y:number) {
-        var emitter = this.scene.add.particles('red-spark').createEmitter({
+        let emitter = this.scene.add.particles('red-spark').createEmitter({
             x: _x,
             y: _y,
             speed: { min: -800, max: 800 },

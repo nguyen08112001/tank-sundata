@@ -20,7 +20,7 @@ export class VictoryScene extends Phaser.Scene {
         this.startKey.isDown = false;
         this.score = props.score
 
-        var bestScore = Math.max(this.score, this.bestScore);
+        let bestScore = Math.max(this.score, this.bestScore);
         localStorage.setItem('best', bestScore + '')
     }
 
@@ -83,39 +83,39 @@ export class VictoryScene extends Phaser.Scene {
     }
 
     private createFirework() {
-        var p0 = new Phaser.Math.Vector2(600, 300);
-        var p1 = new Phaser.Math.Vector2(600, 0);
-        var p2 = new Phaser.Math.Vector2(1000, 0);
-        var p3 = new Phaser.Math.Vector2(1000, 300);
+        let p0 = new Phaser.Math.Vector2(600, 300);
+        let p1 = new Phaser.Math.Vector2(600, 0);
+        let p2 = new Phaser.Math.Vector2(1000, 0);
+        let p3 = new Phaser.Math.Vector2(1000, 300);
 
-        var curve = new Phaser.Curves.CubicBezier(p0, p1, p2, p3);
+        let curve = new Phaser.Curves.CubicBezier(p0, p1, p2, p3);
 
-        var max = 28;
-        var points = [];
-        var tangents = [];
+        let max = 28;
+        let points = [];
+        let tangents = [];
 
-        for (var c = 0; c <= max; c++)
+        for (let c = 0; c <= max; c++)
         {
-            var t = curve.getUtoTmapping(c / max, 0);
+            let t = curve.getUtoTmapping(c / max, 0);
 
             points.push(curve.getPoint(t));
             tangents.push(curve.getTangent(t));
         }
 
-        var tempVec = new Phaser.Math.Vector2();
+        let tempVec = new Phaser.Math.Vector2();
 
-        var spark0 = this.add.particles('red-spark');
-        var spark1 = this.add.particles('blue-spark');
+        let spark0 = this.add.particles('red-spark');
+        let spark1 = this.add.particles('blue-spark');
 
-        for (var i = 0; i < points.length; i++)
+        for (let i = 0; i < points.length; i++)
         {
-            var p = points[i];
+            let p = points[i];
 
             tempVec.copy(tangents[i]).normalizeRightHand().scale(-32).add(p);
 
-            var angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.BetweenPoints(p, tempVec));
+            let angle = Phaser.Math.RadToDeg(Phaser.Math.Angle.BetweenPoints(p, tempVec));
 
-            var particles = (i % 2 === 0) ? spark0 : spark1;
+            let particles = (i % 2 === 0) ? spark0 : spark1;
 
             particles.createEmitter({
                 x: tempVec.x,
@@ -131,8 +131,8 @@ export class VictoryScene extends Phaser.Scene {
     }
 
     private createTrunk() {
-        var trunk = new Phaser.Geom.Rectangle(-130, -250, 1150, 860);
-        var particles = this.add.particles('flares');
+        let trunk = new Phaser.Geom.Rectangle(-130, -250, 1150, 860);
+        let particles = this.add.particles('flares');
         particles.createEmitter({
             frame: 'blue',
             x: 360, y: 420,

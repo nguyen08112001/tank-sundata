@@ -90,7 +90,7 @@ export class Bomb extends Phaser.GameObjects.Image {
     }
 
     private createExplosionEmitter() {
-        var particles = this.scene.add.particles('explosion');
+        let particles = this.scene.add.particles('explosion');
 
         particles.createEmitter({
             frame: [ 'smoke-puff', 'cloud', 'smoke-puff' ],
@@ -149,13 +149,13 @@ export class BombsPool extends Phaser.GameObjects.Group {
 
 		const defaults: Phaser.Types.GameObjects.Group.GroupConfig = {
 			active: false,
-            maxSize: -1,
+            maxSize: 10,
             runChildUpdate: true
 		}
 
 		super(scene, Object.assign(defaults, config));
 
-        for (var i = 0; i < 10; i++ ) {
+        for (let i = 0; i < this.maxSize; i++ ) {
             this.add(
                 new Bomb({
                     scene: this.scene,

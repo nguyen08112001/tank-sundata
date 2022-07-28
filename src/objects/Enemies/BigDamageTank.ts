@@ -9,7 +9,6 @@ export class BigDamageTank extends Enemy {
         this.customParentProperties();
 
         this.customConfig();
-        
     }
     private customParentProperties() {
         this.deadPoint = 200;
@@ -17,7 +16,7 @@ export class BigDamageTank extends Enemy {
     }
 
     private customConfig() {
-        this.barrel.setScale(2);
+        this.barrel.setScale(1.5);
         this.tween = this.scene.tweens.add({
             targets: this,
             props: { y: this.y - 200 },

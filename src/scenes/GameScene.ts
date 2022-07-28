@@ -274,17 +274,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     private createBombExplodeZone(_x: number, _y: number, _width: number, _height: number,  _damage: number) {
-        var zone = this.add.zone(_x, _y, _width, _height);
+        console.log(_width, _height)
+        let zone = this.add.zone(_x, _y, _width, _height);
         this.physics.world.enable(zone, 1); // (0) DYNAMIC (1) STATIC
+
+        this.physics.add.overlap(this.enemies, zone, (_enemy: Enemy, _zone: any) => {
+            zone.destroy();
+            _enemy.gotDamage(_x, _y, _damage);
+        })
 
         this.physics.add.overlap(this.player, zone, () => {
             zone.destroy();
             this.player.gotHitWithDamage(_x, _y, _damage);
         })
-        this.physics.add.overlap(this.enemies, zone, (_enemy: Enemy, _zone: any) => {
-            zone.destroy();
-            _enemy.gotDamage(_x, _y, _damage);
-        })
+        
         this.time.addEvent({
             delay: 20,
             callback: () => {
@@ -372,7 +375,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     private createNewBox(_x: number, _y: number, _type: string) {
-        var box = new Box({
+        let box = new Box({
             scene: this,
             x: _x,
             y: _y - 40,
@@ -382,7 +385,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     private createNewEnemy(_x: number, _y: number) {
-        var tmp = 'BigDamageTank';
         let enemy;
 
         switch (kindOfEnemy[Math.floor(Math.random()*kindOfEnemy.length)]) {
