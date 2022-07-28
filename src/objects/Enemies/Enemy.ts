@@ -31,7 +31,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         return this.bullets;
     }
 
-    setDead() {
+    setDying() {
         this.body.checkCollision.none = true;
         this.createDeadEffectAndSetActive();
         eventsCenter.emit('enemy-dead', this.x, this.y);
@@ -44,7 +44,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         if (this.health > 0) {
             
         } else {
-            this.setDead();
+            this.setDying();
         }
     }
 
@@ -52,6 +52,8 @@ export class Enemy extends Phaser.GameObjects.Image {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
         this.init();
         this.scene.add.existing(this);
+
+        this.once('destroy', this.onDestroy, this);
     }
 
     update(_playerX: number, _playerY: number): void {
@@ -60,11 +62,14 @@ export class Enemy extends Phaser.GameObjects.Image {
             this.updateTankImage(_playerX, _playerY);
             this.handleShooting();
         } else {
-            this.barrel.destroy();
-            this.lifeBar.destroy();
             this.destroy();
         }
     }
+
+    private onDestroy () {
+        this.barrel.destroy();
+        this.lifeBar.destroy();
+      }
 
     private init() {
         // variables
@@ -93,6 +98,12 @@ export class Enemy extends Phaser.GameObjects.Image {
             runChildUpdate: true
         });
 
+        for (var i = 0; i < 10; i++ ) {
+            this.bullets.add(
+                this.createNewBullet()
+            )
+        }
+
         // tweens
         this.tween = this.scene.tweens.add({
             targets: this,
@@ -109,6 +120,19 @@ export class Enemy extends Phaser.GameObjects.Image {
 
         // physics
         this.scene.physics.world.enable(this);
+    }
+
+    private createNewBullet() {
+        return new Bullet({
+            scene: this.scene,
+            rotation: this.barrel.rotation,
+            x: this.x,
+            y: this.y,
+            texture: 'bulletRed',
+            damage: this.damage
+        })
+        .setActive(false)
+        .setVisible(false)
     }
 
     private updateTankImage(_playerX: number, _playerY: number) {
@@ -152,20 +176,16 @@ export class Enemy extends Phaser.GameObjects.Image {
     
 
     private handleShooting(): void {
-        if (this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
+        if (this.scene.time.now > this.nextShoot) {
 
-            this.bullets.add(
-                new Bullet({
-                    scene: this.scene,
-                    rotation: this.barrel.rotation,
-                    x: this.barrel.x,
-                    y: this.barrel.y,
-                    texture: 'bulletRed',
-                    damage: this.damage
-                })
-            );
+            var bullet = this.bullets.get(this.x, this.y) as Bullet
+                
+            if (bullet) {
+                //if bullet exists
+                bullet.reInitWithAngle(this.barrel.rotation);
 
-            this.nextShoot = this.scene.time.now + this.shootingDelayTime;
+                this.nextShoot = this.scene.time.now + this.shootingDelayTime;
+            }
         }
     }
 

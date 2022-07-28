@@ -49,8 +49,8 @@ export class Player extends Phaser.GameObjects.Container {
         return this.bullets;
     }
 
-    gotDamage(_x: number, _y: number, _dame: number): void {
-        if(this.shield) return;
+    gotHitWithDamage(_x: number, _y: number, _dame: number): void {
+        if(this.getShield()) return;
 
         this.health -= _dame;
         this.hitSound.play()
@@ -59,17 +59,16 @@ export class Player extends Phaser.GameObjects.Container {
         this.createGotHitEffect(_x, _y);        
     }
 
-    
     getBombs() {
         return this.bombs;
     }
 
-    set shield (shield: boolean) {
+    setShield(shield: boolean) {
         this._shield.setVisible(shield);
         this.hasShield = shield;
     }
 
-    get shield () {
+    getShield () {
         return this.hasShield;
     }
 
@@ -132,20 +131,53 @@ export class Player extends Phaser.GameObjects.Container {
         this.nextBomb = 0;
         this.speed = 300;
         this.damage = 0.05;
-        this.shield = false;
+        this.setShield(false);
     }
     private initWeaponObject() {
-        this.bombs = this.scene.add.group({
-            /*classType: Enemy*/
-            runChildUpdate: true
-        });
+        
+        this.initBombsPool();
+        this.initBulletsPool();
 
-        this.bullets = this.scene.add.group({
-            /*classType: Bullet,*/
-            active: true,
+    }
+
+    private initBombsPool() {
+        this.bombs = this.scene.add.group({
+            /*classType: Bomb*/
+            active: false,
             maxSize: 10,
             runChildUpdate: true
         });
+
+        for (var i = 0; i < 10; i++ ) {
+            this.bombs.add(
+                this.createNewBomb()
+            )
+        }
+    }
+    private initBulletsPool() {
+        this.bullets = this.scene.add.group({
+            // classType: Bullet,
+            active: false,
+            maxSize: 10,
+            runChildUpdate: true
+        });
+
+        for (var i = 0; i < 10; i++ ) {
+            this.bullets.add(
+                this.createNewBullet()
+            )
+        }
+    }
+
+    private createNewBullet() {
+        return new Bullet({
+            scene: this.scene,
+            rotation: this.barrel.rotation,
+            x: this.x,
+            y: this.y,
+            texture: 'bulletBlue',
+            damage: this.damage
+        })
     }
 
     private initContainer(texture: string) {
@@ -179,19 +211,32 @@ export class Player extends Phaser.GameObjects.Container {
     private handleBomb() {
         if (this.spaceKey.isDown && this.scene.time.now > this.nextBomb) {
 
-            const bomb = new Bomb({
-                scene: this.scene,
-                rotation: this.barrel.rotation,
-                x: this.x,
-                y: this.y,
-                texture: 'bomb',
-                damage: 100
-            });
-            this.bombs.add(bomb)
+            var bomb = this.bombs.get(this.x, this.y) as Bomb
+                
+            if (bomb) {
+            //if bullet exists
+                eventsCenter.emit('change-score', -10);
+
+                this.addShootingEffect();
+
+                bomb.reInitWithAngle(this.barrel.rotation);
+
+                this.nextBomb = this.scene.time.now+1000;
+            }
             
-            this.nextBomb = this.scene.time.now+1000;
         }
         
+    }
+
+    private createNewBomb() {
+        return new Bomb({
+            scene: this.scene,
+            rotation: this.barrel.rotation,
+            x: this.x,
+            y: this.y,
+            texture: 'bomb',
+            damage: 100
+        });
     }
 
     private handleInput() {
@@ -228,41 +273,40 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     private handleShooting(): void {
-        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot && this.bullets.getLength() < 10) {
+        if (this.scene.input.activePointer.isDown && this.scene.time.now > this.nextShoot) {
+            var bullet = this.bullets.get(this.x, this.y) as Bullet
+                
+            if (bullet) {
+            //if bullet exists
+                eventsCenter.emit('change-score', -1);
 
-            eventsCenter.emit('change-core', -1);
+                this.shootSound.play({
+                    volume: 0.3
+                });
 
-            this.shootSound.play({
-                volume: 0.3
-            })
-            this.scene.tweens.add({
-                targets: this,
-                props: { alpha: 0.8 },
-                delay: 0,
-                duration: 5,
-                ease: 'Power1',
-                easeParams: null,
-                hold: 0,
-                repeat: 0,
-                repeatDelay: 0,
-                yoyo: true,
-                paused: false
-            });
+                this.addShootingEffect();
 
-            this.bullets.add(
-                new Bullet({
-                    scene: this.scene,
-                    rotation: this.barrel.rotation,
-                    x: this.x,
-                    y: this.y,
-                    texture: 'bulletBlue',
-                    damage: this.damage
-                })
-            )
+                bullet.reInitWithAngle(this.barrel.rotation);
 
-            this.nextShoot = this.scene.time.now + 80;
-            
+                this.nextShoot = this.scene.time.now + 80;
+            }
         }
+    }
+
+    private addShootingEffect() {
+        this.scene.tweens.add({
+            targets: this,
+            props: { alpha: 0.8 },
+            delay: 0,
+            duration: 5,
+            ease: 'Power1',
+            easeParams: null,
+            hold: 0,
+            repeat: 0,
+            repeatDelay: 0,
+            yoyo: true,
+            paused: false
+        });
     }
 
     private updateLifebar(): void {
@@ -283,7 +327,8 @@ export class Player extends Phaser.GameObjects.Container {
     }
 
     private createGotHitEffect(_x: number, _y: number) {
-        this.setAlpha(0)
+        this.setAlpha(0);
+
         this.scene.tweens.add({
             targets: this,
             props: {
@@ -294,6 +339,7 @@ export class Player extends Phaser.GameObjects.Container {
             onComplete: () => {
             }
         })
+
         var emitter = this.scene.add.particles('blue-spark').createEmitter({
             x: _x,
             y: _y,

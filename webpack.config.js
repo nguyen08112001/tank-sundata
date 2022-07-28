@@ -28,5 +28,6 @@ module.exports = {
     },
     resolve: {
         extensions: ['.ts', '.js']
-    }
+    },
+    cache: false
 };

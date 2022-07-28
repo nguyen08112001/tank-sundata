@@ -13,22 +13,44 @@ export class Bullet extends Phaser.GameObjects.Image {
 
     gotHit() {
         this.fireEffect?.stop()
-        this.destroy()
+        this.setVisible(false);
+        this.setActive(false)
+        this.body.enable = false;
+        // this.destroy()
+    }
+
+    reInitWithAngle(_rotation: number) {
+        this.rotation = _rotation
+
+        this.scene.physics.velocityFromRotation(
+            this.rotation - Math.PI / 2,
+            this.speed,
+            this.body.velocity
+        );
+
+        this.setActive(true)
+            .setVisible(true)
+
+        this.body.enable = true;
     }
 
     constructor(aParams: IBulletConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture);
 
         this.rotation = aParams.rotation;
-        this.initImage();
+        this.init();
         this.damage = aParams.damage;
         this.scene.add.existing(this);
+        
+        this.body.enable = false;
+        this.setActive(false)
+        this.setVisible(false)
     }
 
     update(): void {
     }
 
-    private initImage(): void {
+    private init(): void {
         // variables
         this.speed = 1000;
 
@@ -38,16 +60,13 @@ export class Bullet extends Phaser.GameObjects.Image {
 
         // physics
         this.scene.physics.world.enable(this);
-        this.scene.physics.velocityFromRotation(
-            this.rotation - Math.PI / 2,
-            this.speed,
-            this.body.velocity
-        );
 
         // this.createFireEffect();
 
     }
-    private createFireEffect() {
+
+    
+    createFireEffect() {
         var particles = this.scene.add.particles('flares');
 
         this.fireEffect = particles.createEmitter({

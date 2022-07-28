@@ -63,7 +63,8 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(): void {
-        this.updateScore()
+        this.updateScore();
+        
         this.player.update();
 
         this.enemies.children.each((enemy: Enemy) => {
@@ -82,7 +83,7 @@ export class GameScene extends Phaser.Scene {
         this.minimap.ignore(this.scoreText)
     }
     private createUI() {
-        this.input.setDefaultCursor('url(./assets/blue.cur), pointer')
+        this.input.setDefaultCursor('url(./assets/blue.cur), pointer');
         this.createButton();
         this.createScoreText();
     }
@@ -177,11 +178,11 @@ export class GameScene extends Phaser.Scene {
         });
 
         this.physics.add.overlap(this.player, this.shield, () => {
-            this.player.shield = true;
+            this.player.setShield(true);
             this.time.addEvent({
                 delay: 5000,
                 callback: () => {
-                    this.player.shield = false
+                    this.player.setShield(false)
                 }
             }) 
             this.shield.destroy()
@@ -203,7 +204,7 @@ export class GameScene extends Phaser.Scene {
         eventsCenter.on('player-dead', this.setGameOver, this);
         eventsCenter.on('enemy-dead', this.handleEnemyDead, this);
         eventsCenter.on('pause-game', this.setPauseGame, this);
-        eventsCenter.on('change-core', this.changeScoreWithAmount, this);
+        eventsCenter.on('change-score', this.changeScoreWithAmount, this);
 
         // clean up when Scene is shutdown
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -268,7 +269,7 @@ export class GameScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, zone, () => {
             zone.destroy();
-            this.player.gotDamage(_x, _y, _damage);
+            this.player.gotHitWithDamage(_x, _y, _damage);
         })
         this.physics.add.overlap(this.enemies, zone, (_enemy: Enemy, _zone: any) => {
             zone.destroy();
@@ -424,7 +425,7 @@ export class GameScene extends Phaser.Scene {
 
     private enemyBulletHitPlayer(bullet: Bullet, player: Player): void {
         bullet.gotHit();
-        player.gotDamage(bullet.x, bullet.y, bullet.getDamage());
+        player.gotHitWithDamage(bullet.x, bullet.y, bullet.getDamage());
     }
 
     private playerBulletHitEnemy(bullet: Bullet, enemy: Enemy): void {

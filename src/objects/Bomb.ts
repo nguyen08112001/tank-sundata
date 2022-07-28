@@ -4,10 +4,29 @@ import eventsCenter from '../scenes/EventsCenter';
 export class Bomb extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
-    private bombSpeed: number;
+    private speed: number;
     private damage: number;
     private zoneWidth: number;
     private zoneHeight: number;
+
+    reInitWithAngle(_rotation: number) {
+        this.rotation = _rotation
+
+        this.scene.physics.velocityFromRotation(
+            this.rotation - Math.PI / 2,
+            this.speed,
+            this.body.velocity
+        );
+
+        this.setActive(true)
+            .setVisible(true)
+
+        this.body.enable = true;
+
+        this.initExploreCounter();
+
+    }
+
 
     constructor(aParams: IBulletConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture);
@@ -16,8 +35,9 @@ export class Bomb extends Phaser.GameObjects.Image {
         
         this.init();
         this.scene.add.existing(this);
-
-        this.initExploreCounter();
+        this.body.enable = false;
+        this.setActive(false)
+        this.setVisible(false)
     }
 
     private initExploreCounter() {
@@ -31,7 +51,7 @@ export class Bomb extends Phaser.GameObjects.Image {
 
     private init(): void {
         // variables
-        this.bombSpeed = 1000;
+        this.speed = 1000;
         this.damage = 1;
         this.zoneWidth = 300;
         this.zoneHeight = 300;
@@ -44,7 +64,7 @@ export class Bomb extends Phaser.GameObjects.Image {
         this.scene.physics.world.enable(this);
         this.scene.physics.velocityFromRotation(
             this.rotation - Math.PI / 2,
-            this.bombSpeed,
+            this.speed,
             this.body.velocity
         );
         this.body.setSize(this.width/2,this.height/2)
@@ -64,7 +84,9 @@ export class Bomb extends Phaser.GameObjects.Image {
     private explode() {
         this.pushCreateDeadZoneEvent();
         this.createExplosionEmitter();
-        this.destroy();
+        this.setVisible(false);
+        this.setActive(false);
+        this.body.enable = false;
     }
 
     private createExplosionEmitter() {
