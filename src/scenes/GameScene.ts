@@ -227,12 +227,12 @@ export class GameScene extends Phaser.Scene {
         }
     }
     
-    private handleEnemyDead(_x: number, _y: number) {
+    private handleEnemyDead(_x: number, _y: number, _point: number) {
 
         this.time.addEvent({
             delay: 1000,
             callback: () => {
-                this.score+=100;
+                this.score+=_point;
                 this.tweens.add({
                     targets: this.scoreText,
                     props: {

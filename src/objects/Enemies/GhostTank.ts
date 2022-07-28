@@ -5,8 +5,12 @@ import { Enemy } from "./Enemy";
 export class GhostTank extends Enemy {
     constructor(aParams: IImageConstructor) {
         super(aParams);
-        this.customParentProperties()
+        super.initProperties();
+        this.customParentProperties();
+        super.initContainer();
+        super.initBehavior();
         this.customConfig();
+        super.initWeapons();
     }
 
     private customParentProperties() {

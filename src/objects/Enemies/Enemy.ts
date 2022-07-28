@@ -6,12 +6,12 @@ export class Enemy extends Phaser.GameObjects.Image {
     body: Phaser.Physics.Arcade.Body;
 
     // variables
-    protected health: number = 1;
-    protected nextShoot: number = 0;
-    protected damage: number = 0.05;
+    protected health: number ;
+    protected nextShoot: number ;
+    protected damage: number ;
     protected bulletTexture: string;
-    protected deadPoint: number = 100;
-    private shootingDelayTime: number = 400;
+    protected deadPoint: number ;
+    protected shootingDelayTime: number;
 
 
     // children
@@ -37,7 +37,8 @@ export class Enemy extends Phaser.GameObjects.Image {
     setDying() {
         this.body.checkCollision.none = true;
         this.createDeadEffectAndSetActive();
-        eventsCenter.emit('enemy-dead', this.x, this.y);
+        console.log(this.deadPoint);
+        eventsCenter.emit('enemy-dead', this.x, this.y, this.deadPoint);
     }
 
     gotDamage(_x: number, _y:number, _damage: number): void {
@@ -53,7 +54,7 @@ export class Enemy extends Phaser.GameObjects.Image {
 
     constructor(aParams: IImageConstructor) {
         super(aParams.scene, aParams.x, aParams.y, aParams.texture, aParams.frame);
-        this.init();
+        // this.init();
         this.scene.add.existing(this);
         this.once('destroy', this.onDestroy, this);
     }
@@ -73,7 +74,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.lifeBar.destroy();
     }
 
-    private initProperties() {
+    protected initProperties() {
         // variables
         this.health = 1;
         this.nextShoot = 0;
@@ -81,16 +82,16 @@ export class Enemy extends Phaser.GameObjects.Image {
         this.shootingDelayTime = 400;
     }
 
-    private init() {
+    protected init() {
         this.initContainer();
 
-        // this.initProperties()
+        this.initProperties()
 
         this.initWeapons();
 
         this.initBehavior();
     }
-    private initBehavior() {
+    protected initBehavior() {
         // tweens
         this.tween = this.scene.tweens.add({
             targets: this,
@@ -105,7 +106,7 @@ export class Enemy extends Phaser.GameObjects.Image {
             yoyo: true
         });
     }
-    private initContainer() {
+    protected initContainer() {
         // image
         this.setDepth(0);
 
@@ -121,7 +122,7 @@ export class Enemy extends Phaser.GameObjects.Image {
         // physics
         this.scene.physics.world.enable(this);
     }
-    private initWeapons() {
+    protected initWeapons() {
         // game objects
 
         console.log(this.damage)

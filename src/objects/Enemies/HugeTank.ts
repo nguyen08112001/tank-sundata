@@ -4,8 +4,12 @@ import { Enemy } from "./Enemy";
 export class HugeTank extends Enemy {
     constructor(aParams: IImageConstructor) {
         super(aParams);
-        this.customConfig();
+        super.initProperties();
         this.customParentProperties();
+        super.initContainer();
+        super.initBehavior();
+        this.customConfig();
+        super.initWeapons();
     }
 
     private customParentProperties() {

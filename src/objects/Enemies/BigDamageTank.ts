@@ -5,18 +5,16 @@ import { Enemy } from "./Enemy";
 export class BigDamageTank extends Enemy {
     constructor(aParams: IImageConstructor) {
         super(aParams);
-
+        super.initProperties();
         this.customParentProperties();
-
-        this.customConfig();
+        super.initContainer();
+        this.customContainer();
+        super.initWeapons();
+        this.customWeapons();
+        super.initBehavior();
+        this.customBehavior();
     }
-    private customParentProperties() {
-        this.deadPoint = 200;
-        this.damage = 0.2;
-    }
-
-    private customConfig() {
-        this.barrel.setScale(1.5);
+    private customBehavior() {
         this.tween = this.scene.tweens.add({
             targets: this,
             props: { y: this.y - 200 },
@@ -29,12 +27,20 @@ export class BigDamageTank extends Enemy {
             repeatDelay: 0,
             yoyo: true
         });
-
+    }
+    private customContainer() {
+        this.barrel.setScale(1.5);
+    }
+    private customParentProperties() {
+        this.deadPoint = 200;
+        this.damage = 1;
+        this.bulletTexture = 'shield-white';
+    }
+    private customWeapons() {
         this.getBullets().children.iterate((bullet) => {
             var _bullet = bullet as Bullet
             _bullet.createFireEffect()
-            _bullet.setTexture('shield-white'),
-            _bullet.setDamage(this.damage)
+            // _bullet.setTexture('shield-white'),
             _bullet.setDisplaySize(100, 100)
             _bullet.body.setSize(500, 500)
         })
